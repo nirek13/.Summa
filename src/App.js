@@ -20,7 +20,7 @@ const App = () => {
                 <Route path="/chat" element={<MultimodalChatbot />} />
                 <Route path="/investors" element={<InvestorDatabase />} />
             </Routes>
-            <Footer />
+            
         </div>
         
     );

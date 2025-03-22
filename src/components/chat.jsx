@@ -407,7 +407,7 @@ const MultimodalChatbot = () => {
           <p>Multimodal AI Assistant</p>
           {messages.length > 0 && (
             <button className="toggle-expand-button" onClick={toggleExpand}>
-              {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+              {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={15} />}
             </button>
           )}
         </div>
