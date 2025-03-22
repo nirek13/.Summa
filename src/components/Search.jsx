@@ -73,7 +73,7 @@ const InvestorDatabase = () => {
 
                 console.log("Sending payload:", payload);
 
-                fetch("https://vc-matcher-api-1096385495920.us-central1.run.app/rank-vcs", {
+                fetch("https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
@@ -677,3 +677,5 @@ const InvestorDatabase = () => {
         </div>
     );
 };
+
+export default InvestorDatabase;
