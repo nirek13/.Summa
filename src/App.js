@@ -5,9 +5,9 @@ import Home from "./components/landing";
 import SignupFlow from "./components/signup";  // Correct component name
 import InvestorDatabase from "./components/Search";
 import MultimodalChatbot from "./components/chat";  // Correct component name
+import Footer from "./components/footer";  // Correct component name
+
 const App = () => {
-
-
 
     return (
         <div>
@@ -20,7 +20,9 @@ const App = () => {
                 <Route path="/chat" element={<MultimodalChatbot />} />
                 <Route path="/investors" element={<InvestorDatabase />} />
             </Routes>
+            <Footer />
         </div>
+        
     );
 };
 
