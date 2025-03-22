@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Updated styles with new color palette and LED lighting effects
+// Keeping the existing styles with LED lighting effects
 const styles = {
     // Layout & Base Styles
     container: {
@@ -460,9 +460,9 @@ const styles = {
     }
 };
 
-const SummaLandingPage = () => {
+const StartupMatchingPlatform = () => {
     const [email, setEmail] = useState('');
-    const [activeTab, setActiveTab] = useState('analyze');
+    const [activeTab, setActiveTab] = useState('match');
     const [hoveredFeature, setHoveredFeature] = useState(null);
 
     // LED color cycling effect for hero section
@@ -495,16 +495,16 @@ const SummaLandingPage = () => {
                     <div style={styles.heroLedGlow2}></div>
                     <div style={styles.heroContent}>
                         <h1 style={styles.heroTitle}>
-                            State-of-the-art<br />
-                            generative and retrieval models
+                            Connect with the<br />
+                            perfect investors for your startup
                         </h1>
                         <p style={styles.heroText}>
-                            Unlock the unlimited potential of AI with our three model families — designed
-                            to meet the diverse needs of enterprises.
+                            Our intelligent matching platform connects founders with investors, mentors, and business 
+                            expertise — so you can focus on building your vision.
                         </p>
                         <div style={styles.buttonGroup}>
-                            <button style={styles.primaryButton}>Get Started</button>
-                            <button style={styles.secondaryButton}>Learn More</button>
+                            <button style={styles.primaryButton}>Get Matched Today</button>
+                            <button style={styles.secondaryButton}>How It Works</button>
                         </div>
                     </div>
                 </section>
@@ -517,69 +517,72 @@ const SummaLandingPage = () => {
                             <div
                                 style={{
                                     ...styles.tab,
-                                    ...(activeTab === 'analyze' ? styles.activeTab : {})
+                                    ...(activeTab === 'match' ? styles.activeTab : {})
                                 }}
-                                onClick={() => setActiveTab('analyze')}
+                                onClick={() => setActiveTab('match')}
                             >
-                                Analyze
+                                Match
                             </div>
                             <div
                                 style={{
                                     ...styles.tab,
-                                    ...(activeTab === 'distill' ? styles.activeTab : {})
+                                    ...(activeTab === 'advise' ? styles.activeTab : {})
                                 }}
-                                onClick={() => setActiveTab('distill')}
+                                onClick={() => setActiveTab('advise')}
                             >
-                                Distill
+                                Advise
                             </div>
                             <div
                                 style={{
                                     ...styles.tab,
-                                    ...(activeTab === 'present' ? styles.activeTab : {})
+                                    ...(activeTab === 'mentor' ? styles.activeTab : {})
                                 }}
-                                onClick={() => setActiveTab('present')}
+                                onClick={() => setActiveTab('mentor')}
                             >
-                                Present
+                                Mentor
                             </div>
                         </div>
 
                         <div style={styles.tabContent}>
                             <div style={styles.tabContentLed}></div>
-                            {activeTab === 'analyze' && (
+                            {activeTab === 'match' && (
                                 <>
-                                    <h3 style={styles.tabTitle}>Streamline your workflows with advanced language models</h3>
+                                    <h3 style={styles.tabTitle}>Find the perfect investors for your startup</h3>
                                     <p style={styles.tabDescription}>
-                                        Advanced algorithms parse complex texts to identify key concepts and relationships
-                                        with unprecedented accuracy, enabling faster and more efficient information processing.
+                                        Our proprietary algorithm matches founders with investors based on industry, 
+                                        stage, funding requirements, and strategic alignment — dramatically increasing 
+                                        your chances of securing the right funding.
                                     </p>
                                     <button style={{...styles.secondaryButton}}>
-                                        Learn more
+                                        See matching success stories
                                     </button>
                                 </>
                             )}
 
-                            {activeTab === 'distill' && (
+                            {activeTab === 'advise' && (
                                 <>
-                                    <h3 style={styles.tabTitle}>Extract essential insights from complex information</h3>
+                                    <h3 style={styles.tabTitle}>Your virtual CFO and business advisor</h3>
                                     <p style={styles.tabDescription}>
-                                        Extract the essence of information, removing noise while preserving meaning
-                                        through our proprietary methods, turning complex data into actionable knowledge.
+                                        Get personalized financial guidance, business strategy advice, and 
+                                        cash flow projections from our AI-powered virtual CFO — helping you 
+                                        make sound business decisions without the executive-level costs.
                                     </p>
                                     <button style={{...styles.secondaryButton}}>
-                                        Learn more
+                                        Learn about virtual CFO
                                     </button>
                                 </>
                             )}
 
-                            {activeTab === 'present' && (
+                            {activeTab === 'mentor' && (
                                 <>
-                                    <h3 style={styles.tabTitle}>Visualize insights with intuitive interfaces</h3>
+                                    <h3 style={styles.tabTitle}>Connect with experienced startup mentors</h3>
                                     <p style={styles.tabDescription}>
-                                        Present clarity where confusion once stood through advanced visualization tools
-                                        and intuitive interfaces designed for maximum comprehension and impact.
+                                        Access a network of experienced entrepreneurs and industry veterans 
+                                        who've been where you are. Our mentor matching helps you find advisors 
+                                        who can provide guidance specific to your challenges and goals.
                                     </p>
                                     <button style={{...styles.secondaryButton}}>
-                                        Learn more
+                                        Browse our mentor network
                                     </button>
                                 </>
                             )}
@@ -591,17 +594,17 @@ const SummaLandingPage = () => {
                 <section id="features" style={styles.featuresSection}>
                     <div style={styles.featureLedGlow}></div>
                     <div style={styles.sectionHeader}>
-                        <h2 style={styles.sectionTitle}>How Summa transforms your workflow</h2>
+                        <h2 style={styles.sectionTitle}>How we propel your startup forward</h2>
                         <p style={styles.sectionSubtitle}>
-                            Our platform uses cutting-edge technology to simplify complex information processing
+                            Our platform uses intelligent matching and expert resources to help founders succeed
                         </p>
                     </div>
 
                     <div style={styles.featuresGrid}>
                         {[
                             {
-                                title: "Analyze",
-                                description: "Advanced algorithms parse complex texts to identify key concepts and relationships with unprecedented accuracy.",
+                                title: "Investor Matching",
+                                description: "Our algorithm connects you with investors who are actively seeking opportunities in your space and stage, based on over 50 alignment factors.",
                                 icon: (
                                     <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -609,8 +612,8 @@ const SummaLandingPage = () => {
                                 )
                             },
                             {
-                                title: "Distill",
-                                description: "Extract the essence of information, removing noise while preserving meaning through our proprietary methods.",
+                                title: "Virtual CFO",
+                                description: "Access sophisticated financial modeling, runway analysis, and business advice tailored to your startup's unique position and challenges.",
                                 icon: (
                                     <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -618,11 +621,11 @@ const SummaLandingPage = () => {
                                 )
                             },
                             {
-                                title: "Present",
-                                description: "Visualize insights in an intuitive interface designed for clarity and comprehension with customizable views.",
+                                title: "Mentor Network",
+                                description: "Connect with seasoned entrepreneurs and industry experts who provide strategic guidance, help you avoid common pitfalls, and open doors to opportunities.",
                                 icon: (
                                     <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 )
                             }
@@ -655,9 +658,9 @@ const SummaLandingPage = () => {
                     <div style={styles.ctaCard}>
                         <div style={styles.ctaGlowEffect}></div>
                         <div style={styles.ctaContent}>
-                            <h2 style={styles.ctaTitle}>Ready to experience the future of information processing?</h2>
+                            <h2 style={styles.ctaTitle}>Ready to connect with investors who believe in your vision?</h2>
                             <p style={styles.ctaText}>
-                                Join thousands of researchers, analysts, and knowledge workers who are already using Summa.
+                                Join hundreds of founders who've found the right investors, mentors, and advisors through our platform.
                             </p>
                             <div style={styles.ctaForm}>
                                 <input
@@ -667,10 +670,10 @@ const SummaLandingPage = () => {
                                     placeholder="Your email address"
                                     style={styles.ctaInput}
                                 />
-                                <button style={styles.ctaButton}>Get Early Access</button>
+                                <button style={styles.ctaButton}>Join The Waitlist</button>
                             </div>
                             <p style={styles.ctaNote}>
-                                No credit card required. Free trial for 14 days.
+                                Limited spots available for our beta program. No credit card required.
                             </p>
                         </div>
                     </div>
@@ -680,4 +683,4 @@ const SummaLandingPage = () => {
     );
 };
 
-export default SummaLandingPage;
+export default StartupMatchingPlatform;
