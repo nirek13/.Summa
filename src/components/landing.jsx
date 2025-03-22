@@ -1,8 +1,430 @@
 import React, { useState, useEffect } from 'react';
 
+// Styles as a separate object
+const styles = {
+    // Layout & Base Styles
+    container: {
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 1,
+    },
+    pageWrapper: {
+        minHeight: '100vh',
+        backgroundColor: '#ffffff',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        color: '#1a202c',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+
+    // Navigation - Updated to match Cohere style
+    navbar: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        transition: 'all 0.3s ease',
+        padding: '20px 0',
+        backgroundColor: '#ffffff',
+    },
+    navbarScrolled: {
+        backgroundColor: '#ffffff',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+    },
+    navContent: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    logo: {
+        fontSize: '24px',
+        fontWeight: 600,
+        letterSpacing: '-0.5px',
+        color: '#333333',
+    },
+    logoColorDot: {
+        display: 'inline-block',
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        backgroundColor: '#6366f1',
+        marginRight: '4px',
+        marginLeft: '2px',
+    },
+    navLinks: {
+        display: 'none',
+        gap: '32px',
+        '@media (min-width: 768px)': {
+            display: 'flex',
+        }
+    },
+    navLink: {
+        fontSize: '16px',
+        fontWeight: 500,
+        color: '#333333',
+        textDecoration: 'none',
+        transition: 'color 0.2s ease',
+        ':hover': {
+            color: '#111827',
+        }
+    },
+    primaryButton: {
+        display: 'inline-block',
+        backgroundColor: '#333333',
+        color: 'white',
+        fontWeight: 500,
+        fontSize: '16px',
+        padding: '12px 24px',
+        borderRadius: '9999px',
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        textDecoration: 'none',
+        ':hover': {
+            backgroundColor: '#111827',
+        }
+    },
+
+    // Hero Section - Updated to match Cohere style
+    heroSection: {
+        paddingTop: '160px',
+        paddingBottom: '96px',
+        backgroundColor: '#f7f7f7',
+    },
+    heroContent: {
+        maxWidth: '1000px',
+        margin: '0 auto',
+        textAlign: 'center',
+        marginBottom: '64px',
+    },
+    heroTitle: {
+        fontSize: '56px',
+        fontWeight: 700,
+        lineHeight: 1.2,
+        marginBottom: '24px',
+        color: '#333333',
+        '@media (min-width: 768px)': {
+            fontSize: '72px',
+        }
+    },
+    heroText: {
+        fontSize: '22px',
+        color: '#555555',
+        lineHeight: 1.6,
+        marginBottom: '32px',
+        maxWidth: '800px',
+        margin: '0 auto 32px',
+    },
+    buttonGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        justifyContent: 'center',
+        '@media (min-width: 640px)': {
+            flexDirection: 'row',
+        }
+    },
+    secondaryButton: {
+        display: 'inline-block',
+        backgroundColor: 'white',
+        color: '#333333',
+        border: '1px solid #e5e7eb',
+        fontWeight: 500,
+        fontSize: '16px',
+        padding: '12px 24px',
+        borderRadius: '9999px',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        textDecoration: 'none',
+        ':hover': {
+            backgroundColor: '#f3f4f6',
+        }
+    },
+
+    // Features Section
+    featuresSection: {
+        padding: '80px 0',
+        backgroundColor: '#ffffff',
+    },
+    sectionHeader: {
+        textAlign: 'center',
+        marginBottom: '64px',
+    },
+    sectionTitle: {
+        fontSize: '36px',
+        fontWeight: 700,
+        marginBottom: '16px',
+        color: '#333333',
+    },
+    sectionSubtitle: {
+        fontSize: '20px',
+        color: '#555555',
+        maxWidth: '700px',
+        margin: '0 auto',
+    },
+    featuresGrid: {
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '32px',
+        '@media (min-width: 768px)': {
+            gridTemplateColumns: 'repeat(3, 1fr)',
+        }
+    },
+    featureCard: {
+        backgroundColor: 'white',
+        border: '1px solid #f3f4f6',
+        borderRadius: '12px',
+        padding: '32px',
+        transition: 'all 0.3s ease',
+        ':hover': {
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            transform: 'translateY(-5px)',
+        }
+    },
+    featureIcon: {
+        width: '48px',
+        height: '48px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '12px',
+        marginBottom: '24px',
+    },
+    featureTitle: {
+        fontSize: '20px',
+        fontWeight: 700,
+        marginBottom: '12px',
+        color: '#333333',
+    },
+    featureText: {
+        color: '#555555',
+        lineHeight: 1.6,
+    },
+
+    // Tabs Section - New section inspired by Cohere
+    tabsSection: {
+        padding: '80px 0',
+        backgroundColor: '#f7f7f7',
+    },
+    tabsContainer: {
+        display: 'flex',
+        borderBottom: '2px solid #e5e7eb',
+        marginBottom: '40px',
+    },
+    tab: {
+        padding: '16px 32px',
+        fontSize: '18px',
+        fontWeight: '600',
+        color: '#555555',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+    },
+    activeTab: {
+        color: '#333333',
+        borderBottom: '2px solid #333333',
+        marginBottom: '-2px',
+    },
+    tabContent: {
+        backgroundColor: '#333333',
+        color: 'white',
+        padding: '48px',
+        borderRadius: '12px',
+        minHeight: '300px',
+    },
+    tabTitle: {
+        fontSize: '32px',
+        fontWeight: '700',
+        marginBottom: '24px',
+    },
+    tabDescription: {
+        fontSize: '18px',
+        lineHeight: '1.6',
+        marginBottom: '32px',
+        maxWidth: '700px',
+    },
+
+    // Testimonial Section
+    testimonialSection: {
+        padding: '80px 0',
+        backgroundColor: '#ffffff',
+    },
+    testimonialCard: {
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '48px',
+        backgroundColor: 'white',
+    },
+    testimonialContent: {
+        position: 'relative',
+        zIndex: 1,
+        maxWidth: '800px',
+        margin: '0 auto',
+        textAlign: 'center',
+    },
+    quoteIcon: {
+        width: '48px',
+        height: '48px',
+        color: '#333333',
+        margin: '0 auto 24px',
+    },
+    quoteText: {
+        fontSize: '24px',
+        fontWeight: 500,
+        marginBottom: '24px',
+        lineHeight: 1.5,
+        color: '#333333',
+    },
+    testimonialPerson: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    personAvatar: {
+        width: '48px',
+        height: '48px',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: '16px',
+        color: '#333333',
+        fontWeight: 700,
+    },
+    personInfo: {
+        textAlign: 'left',
+    },
+    personName: {
+        fontWeight: 700,
+        color: '#333333',
+    },
+    personTitle: {
+        color: '#555555',
+    },
+
+    // CTA Section
+    ctaSection: {
+        padding: '80px 0',
+        backgroundColor: '#f7f7f7',
+    },
+    ctaCard: {
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '48px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+    },
+    ctaContent: {
+        maxWidth: '800px',
+        margin: '0 auto',
+        textAlign: 'center',
+    },
+    ctaTitle: {
+        fontSize: '36px',
+        fontWeight: 700,
+        marginBottom: '24px',
+        color: '#333333',
+    },
+    ctaText: {
+        fontSize: '20px',
+        color: '#555555',
+        marginBottom: '32px',
+    },
+    ctaForm: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        marginBottom: '32px',
+        '@media (min-width: 640px)': {
+            flexDirection: 'row',
+            justifyContent: 'center',
+        }
+    },
+    ctaInput: {
+        width: '100%',
+        padding: '12px 24px',
+        borderRadius: '9999px',
+        border: '1px solid #e5e7eb',
+        fontSize: '16px',
+        transition: 'all 0.2s ease',
+        outline: 'none',
+        '@media (min-width: 640px)': {
+            width: '256px',
+        },
+        ':focus': {
+            boxShadow: '0 0 0 2px rgba(51, 51, 51, 0.2)',
+            borderColor: '#999999',
+        }
+    },
+    ctaNote: {
+        color: '#6b7280',
+        fontSize: '14px',
+    },
+
+    // Footer
+    footer: {
+        padding: '48px 0',
+        borderTop: '1px solid #e5e7eb',
+        backgroundColor: '#ffffff',
+    },
+    footerContent: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '32px',
+        '@media (min-width: 768px)': {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+        }
+    },
+    footerLinks: {
+        display: 'flex',
+        gap: '32px',
+    },
+    footerLink: {
+        fontSize: '14px',
+        color: '#555555',
+        textDecoration: 'none',
+        transition: 'color 0.2s ease',
+        ':hover': {
+            color: '#333333',
+        }
+    },
+    socialLinks: {
+        display: 'flex',
+        gap: '16px',
+    },
+    socialLink: {
+        width: '32px',
+        height: '32px',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#555555',
+        transition: 'all 0.2s ease',
+        ':hover': {
+            backgroundColor: '#e5e7eb',
+            color: '#333333',
+        }
+    },
+    footerCopyright: {
+        textAlign: 'center',
+        color: '#6b7280',
+        fontSize: '14px',
+        marginTop: '32px',
+    }
+};
+
 const SummaLandingPage = () => {
     const [email, setEmail] = useState('');
     const [scrolled, setScrolled] = useState(false);
+    const [activeTab, setActiveTab] = useState('analyze');
 
     // Handle scroll for navbar effect
     useEffect(() => {
@@ -19,86 +441,137 @@ const SummaLandingPage = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900">
-            {/* Gradient shape decorations */}
-            <div className="fixed top-0 right-0 w-1/3 h-1/3 bg-gradient-to-b from-blue-50 to-purple-50 rounded-full blur-3xl opacity-60 -z-10 transform translate-x-1/3 -translate-y-1/4"></div>
-            <div className="fixed bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-blue-50 to-green-50 rounded-full blur-3xl opacity-60 -z-10 transform -translate-x-1/4 translate-y-1/4"></div>
-
-            <div className="max-w-6xl mx-auto px-6">
-                {/* Navigation */}
-                <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md py-4 shadow-sm' : 'py-6'}`}>
-                    <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-                        <div className="text-2xl font-medium tracking-tight">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">summa</span>
+        <div style={styles.pageWrapper}>
+            {/* Navigation */}
+            <nav style={scrolled ? {...styles.navbar, ...styles.navbarScrolled} : styles.navbar}>
+                <div style={styles.container}>
+                    <div style={styles.navContent}>
+                        <div style={styles.logo}>
+                            <span style={styles.logoColorDot}></span>
+                            summa
                         </div>
-                        <div className="hidden md:flex gap-8">
-                            <a href="#features" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">Features</a>
-                            <a href="#about" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">About</a>
-                            <a href="#contact" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">Contact</a>
+                        <div style={styles.navLinks}>
+                            <a href="#platform" style={styles.navLink}>Platform</a>
+                            <a href="#solutions" style={styles.navLink}>Solutions</a>
+                            <a href="#research" style={styles.navLink}>Research</a>
+                            <a href="#resources" style={styles.navLink}>Resources</a>
+                            <a href="#company" style={styles.navLink}>Company</a>
                         </div>
-                        <button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:shadow-lg transition duration-300">
-                            Get Started
-                        </button>
-                    </div>
-                </nav>
-
-                {/* Hero section */}
-                <div className="pt-32 pb-24">
-                    <div className="max-w-3xl mx-auto text-center mb-16">
-                        <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
-                Distill knowledge into clarity
-              </span>
-                        </h1>
-                        <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                            Summa helps you extract essential insights from complex information,
-                            presenting clarity where confusion once stood.
-                        </p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-full font-medium hover:shadow-lg transition duration-300">
-                                Get Started
-                            </button>
-                            <button className="bg-white text-gray-800 border border-gray-200 px-8 py-3 rounded-full font-medium hover:shadow-md transition duration-300">
-                                See Demo
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Hero visual */}
-                    <div className="relative mx-auto w-full max-w-4xl h-96 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl overflow-hidden shadow-lg">
-                        <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-8 w-full max-w-2xl">
-                                {[1, 2, 3, 4, 5, 6].map((item) => (
-                                    <div
-                                        key={item}
-                                        className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm hover:shadow-md transition duration-300"
-                                    >
-                                        <div className="w-full h-4 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full mb-2"></div>
-                                        <div className="w-2/3 h-3 bg-gray-100 rounded-full"></div>
-                                    </div>
-                                ))}
-                            </div>
+                        <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
+                            <a href="#signin" style={{...styles.navLink, fontWeight: '600'}}>Sign in</a>
+                            <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
                 </div>
+            </nav>
+
+            <div style={styles.container}>
+                {/* Hero section */}
+                <section style={styles.heroSection}>
+                    <div style={styles.heroContent}>
+                        <h1 style={styles.heroTitle}>
+                            State-of-the-art<br />
+                            generative and retrieval models
+                        </h1>
+                        <p style={styles.heroText}>
+                            Unlock the unlimited potential of AI with our three model families — designed
+                            to meet the diverse needs of enterprises.
+                        </p>
+                    </div>
+                </section>
+
+                {/* Tabs Section */}
+                <section style={styles.tabsSection}>
+                    <div style={styles.container}>
+                        <div style={styles.tabsContainer}>
+                            <div
+                                style={{
+                                    ...styles.tab,
+                                    ...(activeTab === 'analyze' ? styles.activeTab : {})
+                                }}
+                                onClick={() => setActiveTab('analyze')}
+                            >
+                                Analyze
+                            </div>
+                            <div
+                                style={{
+                                    ...styles.tab,
+                                    ...(activeTab === 'distill' ? styles.activeTab : {})
+                                }}
+                                onClick={() => setActiveTab('distill')}
+                            >
+                                Distill
+                            </div>
+                            <div
+                                style={{
+                                    ...styles.tab,
+                                    ...(activeTab === 'present' ? styles.activeTab : {})
+                                }}
+                                onClick={() => setActiveTab('present')}
+                            >
+                                Present
+                            </div>
+                        </div>
+
+                        <div style={styles.tabContent}>
+                            {activeTab === 'analyze' && (
+                                <>
+                                    <h3 style={styles.tabTitle}>Streamline your workflows with advanced language models</h3>
+                                    <p style={styles.tabDescription}>
+                                        Advanced algorithms parse complex texts to identify key concepts and relationships
+                                        with unprecedented accuracy, enabling faster and more efficient information processing.
+                                    </p>
+                                    <button style={{...styles.primaryButton, backgroundColor: 'white', color: '#333'}}>
+                                        Learn more
+                                    </button>
+                                </>
+                            )}
+
+                            {activeTab === 'distill' && (
+                                <>
+                                    <h3 style={styles.tabTitle}>Extract essential insights from complex information</h3>
+                                    <p style={styles.tabDescription}>
+                                        Extract the essence of information, removing noise while preserving meaning
+                                        through our proprietary methods, turning complex data into actionable knowledge.
+                                    </p>
+                                    <button style={{...styles.primaryButton, backgroundColor: 'white', color: '#333'}}>
+                                        Learn more
+                                    </button>
+                                </>
+                            )}
+
+                            {activeTab === 'present' && (
+                                <>
+                                    <h3 style={styles.tabTitle}>Visualize insights with intuitive interfaces</h3>
+                                    <p style={styles.tabDescription}>
+                                        Present clarity where confusion once stood through advanced visualization tools
+                                        and intuitive interfaces designed for maximum comprehension and impact.
+                                    </p>
+                                    <button style={{...styles.primaryButton, backgroundColor: 'white', color: '#333'}}>
+                                        Learn more
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </section>
 
                 {/* Features section */}
-                <section id="features" className="py-20">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4">How Summa transforms your workflow</h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
+                <section id="features" style={styles.featuresSection}>
+                    <div style={styles.sectionHeader}>
+                        <h2 style={styles.sectionTitle}>How Summa transforms your workflow</h2>
+                        <p style={styles.sectionSubtitle}>
                             Our platform uses cutting-edge technology to simplify complex information processing
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div style={styles.featuresGrid}>
                         {[
                             {
                                 title: "Analyze",
                                 description: "Advanced algorithms parse complex texts to identify key concepts and relationships with unprecedented accuracy.",
                                 icon: (
-                                    <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg style={{ width: '24px', height: '24px', color: '#333333' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 )
@@ -107,7 +580,7 @@ const SummaLandingPage = () => {
                                 title: "Distill",
                                 description: "Extract the essence of information, removing noise while preserving meaning through our proprietary methods.",
                                 icon: (
-                                    <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg style={{ width: '24px', height: '24px', color: '#333333' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 )
@@ -116,42 +589,38 @@ const SummaLandingPage = () => {
                                 title: "Present",
                                 description: "Visualize insights in an intuitive interface designed for clarity and comprehension with customizable views.",
                                 icon: (
-                                    <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg style={{ width: '24px', height: '24px', color: '#333333' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 )
                             }
                         ].map((feature, index) => (
-                            <div key={index} className="bg-white border border-gray-100 rounded-2xl p-8 hover:shadow-xl transition duration-300">
-                                <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl flex items-center justify-center mb-6">
+                            <div key={index} style={styles.featureCard}>
+                                <div style={styles.featureIcon}>
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-gray-600">{feature.description}</p>
+                                <h3 style={styles.featureTitle}>{feature.title}</h3>
+                                <p style={styles.featureText}>{feature.description}</p>
                             </div>
                         ))}
                     </div>
                 </section>
 
                 {/* Testimonial section */}
-                <section className="py-20">
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-12 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-100 to-purple-100 rounded-full blur-3xl opacity-60 transform translate-x-1/3 -translate-y-1/3"></div>
-
-                        <div className="relative z-10 max-w-3xl mx-auto text-center">
-                            <svg className="w-12 h-12 text-indigo-400 mx-auto mb-6" fill="currentColor" viewBox="0 0 24 24">
+                <section style={styles.testimonialSection}>
+                    <div style={styles.testimonialCard}>
+                        <div style={styles.testimonialContent}>
+                            <svg style={styles.quoteIcon} fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                             </svg>
-                            <blockquote className="text-2xl font-medium mb-6">
+                            <blockquote style={styles.quoteText}>
                                 "Summa transformed how we process research data. What used to take days now happens in minutes, with better results and deeper insights we never thought possible."
                             </blockquote>
-                            <div className="flex items-center justify-center">
-                                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
-                                    <span className="text-indigo-500 font-bold">EM</span>
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-bold">Elena Markova</p>
-                                    <p className="text-gray-600">Research Director, Quantum Analytics</p>
+                            <div style={styles.testimonialPerson}>
+                                <div style={styles.personAvatar}>EM</div>
+                                <div style={styles.personInfo}>
+                                    <p style={styles.personName}>Elena Markova</p>
+                                    <p style={styles.personTitle}>Research Director, Quantum Analytics</p>
                                 </div>
                             </div>
                         </div>
@@ -159,26 +628,24 @@ const SummaLandingPage = () => {
                 </section>
 
                 {/* CTA section */}
-                <section id="contact" className="py-20">
-                    <div className="bg-white border border-gray-100 rounded-3xl p-12 shadow-xl">
-                        <div className="max-w-3xl mx-auto text-center">
-                            <h2 className="text-3xl font-bold mb-6">Ready to experience the future of information processing?</h2>
-                            <p className="text-xl text-gray-600 mb-8">
+                <section id="contact" style={styles.ctaSection}>
+                    <div style={styles.ctaCard}>
+                        <div style={styles.ctaContent}>
+                            <h2 style={styles.ctaTitle}>Ready to experience the future of information processing?</h2>
+                            <p style={styles.ctaText}>
                                 Join thousands of researchers, analysts, and knowledge workers who are already using Summa.
                             </p>
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                            <div style={styles.ctaForm}>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Your email address"
-                                    className="w-full sm:w-64 px-6 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+                                    style={styles.ctaInput}
                                 />
-                                <button className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-full font-medium hover:shadow-lg transition duration-300">
-                                    Get Early Access
-                                </button>
+                                <button style={styles.primaryButton}>Get Early Access</button>
                             </div>
-                            <p className="text-gray-500 text-sm">
+                            <p style={styles.ctaNote}>
                                 No credit card required. Free trial for 14 days.
                             </p>
                         </div>
@@ -186,36 +653,38 @@ const SummaLandingPage = () => {
                 </section>
 
                 {/* Footer */}
-                <footer className="py-12 border-t border-gray-100">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="text-xl font-medium tracking-tight">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">summa</span>
+                <footer style={styles.footer}>
+                    <div style={styles.footerContent}>
+                        <div style={styles.logo}>
+                            <span style={styles.logoColorDot}></span>
+                            summa
                         </div>
-                        <div className="flex gap-8">
-                            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition">Privacy</a>
-                            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition">Terms</a>
-                            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition">Support</a>
-                            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition">Blog</a>
+                        <div style={styles.footerLinks}>
+                            <a href="#" style={styles.footerLink}>Platform</a>
+                            <a href="#" style={styles.footerLink}>Solutions</a>
+                            <a href="#" style={styles.footerLink}>Research</a>
+                            <a href="#" style={styles.footerLink}>Resources</a>
+                            <a href="#" style={styles.footerLink}>Company</a>
                         </div>
-                        <div className="flex gap-4">
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-indigo-50 hover:text-indigo-500 transition">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <div style={styles.socialLinks}>
+                            <a href="#" style={styles.socialLink}>
+                                <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                                 </svg>
                             </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-indigo-50 hover:text-indigo-500 transition">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <a href="#" style={styles.socialLink}>
+                                <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                                 </svg>
                             </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-indigo-50 hover:text-indigo-500 transition">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <a href="#" style={styles.socialLink}>
+                                <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                                 </svg>
                             </a>
                         </div>
                     </div>
-                    <p className="text-center text-gray-500 text-sm mt-8">
+                    <p style={styles.footerCopyright}>
                         © {new Date().getFullYear()} Summa. All rights reserved.
                     </p>
                 </footer>
