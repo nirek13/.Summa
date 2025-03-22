@@ -1,8 +1,9 @@
-/***************************************************************************
+/*****************************************************************************
  * chat.jsx
- * - Front-end UI that calls your backend at /api/chat to get responses
+ * - React front-end chat UI
+ * - Calls your backend at https://genaigenissis.onrender.com/api/chat
  * - No dotenv or @google/generative-ai on the front end
- ***************************************************************************/
+ *****************************************************************************/
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Image, File, X } from 'lucide-react';
@@ -40,8 +41,12 @@ const parseResponse = (text) => {
       const valuesMatch = graphText.match(/values:\s*\[(.*?)\]/);
 
       if (typeMatch && labelsMatch && valuesMatch) {
-        const labels = labelsMatch[1].split(',').map(s => s.trim().replace(/'/g, ''));
-        const values = valuesMatch[1].split(',').map(s => parseFloat(s.trim()));
+        const labels = labelsMatch[1]
+          .split(',')
+          .map((s) => s.trim().replace(/'/g, ''));
+        const values = valuesMatch[1]
+          .split(',')
+          .map((s) => parseFloat(s.trim()));
 
         parts.push({
           type: 'graph',
@@ -75,15 +80,15 @@ const parseResponse = (text) => {
       if (headersMatch && rowsMatch) {
         const headers = headersMatch[1]
           .split(',')
-          .map(item => item.trim().replace(/['"]/g, ''));
+          .map((item) => item.trim().replace(/['"]/g, ''));
 
         const rowsStr = rowsMatch[1];
         const rowMatches = rowsStr.match(/\[(.*?)\]/g) || [];
-        const rows = rowMatches.map(rowText => {
+        const rows = rowMatches.map((rowText) => {
           const withoutBrackets = rowText.slice(1, -1);
           return withoutBrackets
             .split(',')
-            .map(cell => cell.trim().replace(/['"]/g, ''));
+            .map((cell) => cell.trim().replace(/['"]/g, ''));
         });
 
         parts.push({
@@ -289,7 +294,7 @@ const MultimodalChatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 1) Send user message to your local server
+  // 1) Send user message to your Render backend
   const handleSend = async () => {
     if (!inputMessage.trim() && attachments.length === 0) return;
 
@@ -299,25 +304,27 @@ const MultimodalChatbot = () => {
       attachments: [...attachments],
       isUser: true,
     };
-    setMessages(prev => [...prev, newUserMessage]);
+    setMessages((prev) => [...prev, newUserMessage]);
     setInputMessage('');
     setAttachments([]);
     setIsTyping(true);
 
     try {
       // Request the server for an AI response
-      const response = await fetch("https://genaigenissis.onrender.com/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
+      // ✅ Updated to your Render-deployed backend:
+      const response = await fetch('https://genaigenissis.onrender.com/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: inputMessage,
+          attachments
+        })
       });
       const data = await response.json();
       setIsTyping(false);
 
       // Add the AI response to the UI
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         { text: data.text, isUser: false }
       ]);
@@ -326,7 +333,7 @@ const MultimodalChatbot = () => {
       setIsTyping(false);
 
       // In case of server error, show fallback
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           text: "I'm sorry, I encountered a server error. Please try again.",
@@ -348,12 +355,12 @@ const MultimodalChatbot = () => {
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
 
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file.type.startsWith('image/')) {
         // Show a preview if it's an image
         const reader = new FileReader();
         reader.onload = (evt) => {
-          setAttachments(prev => [
+          setAttachments((prev) => [
             ...prev,
             {
               type: 'image',
@@ -367,7 +374,7 @@ const MultimodalChatbot = () => {
         reader.readAsDataURL(file);
       } else {
         // Otherwise treat as a generic file
-        setAttachments(prev => [
+        setAttachments((prev) => [
           ...prev,
           {
             type: 'file',
@@ -387,7 +394,7 @@ const MultimodalChatbot = () => {
 
   // 3) Remove attachment
   const removeAttachment = (index) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
