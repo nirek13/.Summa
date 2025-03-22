@@ -442,29 +442,6 @@ const SummaLandingPage = () => {
 
     return (
         <div style={styles.pageWrapper}>
-            {/* Navigation */}
-            <nav style={scrolled ? {...styles.navbar, ...styles.navbarScrolled} : styles.navbar}>
-                <div style={styles.container}>
-                    <div style={styles.navContent}>
-                        <div style={styles.logo}>
-                            <span style={styles.logoColorDot}></span>
-                            summa
-                        </div>
-                        <div style={styles.navLinks}>
-                            <a href="#platform" style={styles.navLink}>Platform</a>
-                            <a href="#solutions" style={styles.navLink}>Solutions</a>
-                            <a href="#research" style={styles.navLink}>Research</a>
-                            <a href="#resources" style={styles.navLink}>Resources</a>
-                            <a href="#company" style={styles.navLink}>Company</a>
-                        </div>
-                        <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-                            <a href="#signin" style={{...styles.navLink, fontWeight: '600'}}>Sign in</a>
-                            <button style={styles.primaryButton}>Request a demo</button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
             <div style={styles.container}>
                 {/* Hero section */}
                 <section style={styles.heroSection}>
