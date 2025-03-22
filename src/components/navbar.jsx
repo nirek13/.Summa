@@ -15,8 +15,9 @@ const styles = {
         backgroundColor: '#ffffff',
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         color: '#1a202c',
-        position: 'relative',
+        position: 'fixed',
         overflow: 'hidden',
+        zIndex:100,
     },
 
     // Navigation - Updated to match Cohere style

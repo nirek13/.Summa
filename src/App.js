@@ -1,15 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
-import SummaLandingPage from "./components/landing";
-import NavbarPage from './components/navbar';
+import React, { useEffect, useRef } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import Navbar from "./components/navbar";  // Capitalized component name
+import Home from "./components/landing";
+import SignupFlow from "./components/signup";  // Correct component name
 
-function App() {
-  return (
-    <div className="App">
-      <SummaLandingPage />
-      <NavbarPage />
-    </div>
-  );
-}
+const App = () => {
 
-export default App;
+
+
+    return (
+        <div>
+            <Navbar />
+            {/* Corrected to match component name */}
+            <Routes>
+
+                <Route path="/" element={<Home />} />
+                <Route path="/signup" element={<SignupFlow />} />
+            </Routes>
+        </div>
+    );
+};
+
+const AppWrapper = () => (
+    <Router>
+        <App />
+    </Router>
+);
+
+export default AppWrapper;
