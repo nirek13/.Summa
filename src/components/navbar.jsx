@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 
-// Styles as a separate object
 const styles = {
-    // Layout & Base Styles
     container: {
         maxWidth: '1200px',
         margin: '0 auto',
@@ -17,10 +16,8 @@ const styles = {
         color: '#1a202c',
         position: 'fixed',
         overflow: 'hidden',
-        zIndex:100,
+        zIndex: 100,
     },
-
-    // Navigation - Updated to match Cohere style
     navbar: {
         position: 'fixed',
         top: 0,
@@ -70,11 +67,7 @@ const styles = {
         color: '#333333',
         textDecoration: 'none',
         transition: 'color 0.2s ease',
-        ':hover': {
-            color: '#111827',
-        }
     },
-    // New styles for the specific links
     specialNavLink: {
         fontSize: '16px',
         fontWeight: '600',
@@ -82,9 +75,8 @@ const styles = {
         textDecoration: 'none',
         transition: 'color 0.2s ease',
     },
-    // Hover state styles
     specialNavLinkHover: {
-        color: '#4D766E', // Using the same color as the dot in the logo
+        color: '#4D766E',
     },
     primaryButton: {
         display: 'inline-block',
@@ -98,17 +90,15 @@ const styles = {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         textDecoration: 'none',
-        ':hover': {
-            backgroundColor: '#111827',
-        }
     },
 };
 
 const NavbarPage = () => {
     const [scrolled, setScrolled] = useState(false);
     const [hoveredLink, setHoveredLink] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Handle scroll for navbar effect
+    // Detect scroll for navbar background effect
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 50) {
@@ -122,16 +112,22 @@ const NavbarPage = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Detect login status from cookie
+    useEffect(() => {
+        const loggedIn = Cookies.get('user_logged_in') === 'true';
+        setIsLoggedIn(loggedIn);
+    }, []);
+
     return (
         <div style={styles.pageWrapper}>
-            {/* Navigation */}
-            <nav style={scrolled ? {...styles.navbar, ...styles.navbarScrolled} : styles.navbar}>
+            <nav style={scrolled ? { ...styles.navbar, ...styles.navbarScrolled } : styles.navbar}>
                 <div style={styles.container}>
                     <div style={styles.navContent}>
                         <a href="/" style={styles.logo}>
                             <span style={styles.logoColorDot}></span>
                             summa
                         </a>
+
                         <div style={styles.navLinks}>
                             <a href="#platform" style={styles.navLink}>Platform</a>
                             <a href="#solutions" style={styles.navLink}>Solutions</a>
@@ -139,9 +135,10 @@ const NavbarPage = () => {
                             <a href="#resources" style={styles.navLink}>Resources</a>
                             <a href="#company" style={styles.navLink}>Company</a>
                         </div>
-                        <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-                            <a 
-                                href="/chat" 
+
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <a
+                                href="/chat"
                                 style={{
                                     ...styles.specialNavLink,
                                     ...(hoveredLink === 'chat' ? styles.specialNavLinkHover : {})
@@ -151,8 +148,9 @@ const NavbarPage = () => {
                             >
                                 Chat
                             </a>
-                            <a 
-                                href="/investors" 
+
+                            <a
+                                href="/investors"
                                 style={{
                                     ...styles.specialNavLink,
                                     ...(hoveredLink === 'database' ? styles.specialNavLinkHover : {})
@@ -162,18 +160,40 @@ const NavbarPage = () => {
                             >
                                 Database
                             </a>
-                            <a 
-                                href="/signup" 
-                                style={{
-                                    ...styles.specialNavLink,
-                                    ...(hoveredLink === 'signup' ? styles.specialNavLinkHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredLink('signup')}
-                                onMouseLeave={() => setHoveredLink(null)}
-                            >
-                                Sign up
-                            </a>
-                            <button style={styles.primaryButton}>Request a demo</button>
+
+                            {isLoggedIn ? (
+                                <button
+                                    onClick={() => {
+                                        Cookies.remove('user_logged_in');
+                                        localStorage.removeItem('startupSignupData');
+                                        localStorage.removeItem('vcMatcherResults');
+                                        localStorage.removeItem('hasCalledVcMatcherApi');
+                                        window.location.href = "/";
+                                    }}
+                                    style={styles.primaryButton}
+                                >
+                                    Logout
+                                </button>
+                            ) : (
+                                <>
+                                    <a
+                                        href="/signup"
+                                        style={{
+                                            ...styles.specialNavLink,
+                                            ...(hoveredLink === 'signup' ? styles.specialNavLinkHover : {})
+                                        }}
+                                        onMouseEnter={() => setHoveredLink('signup')}
+                                        onMouseLeave={() => setHoveredLink(null)}
+                                    >
+                                        Sign up
+                                    </a>
+                                    <a href="#demo">
+                                        <button style={styles.primaryButton}>
+                                            Request a demo
+                                        </button>
+                                    </a>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

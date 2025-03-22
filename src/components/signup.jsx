@@ -1,4 +1,5 @@
 import { ArrowRight, BarChart2, Briefcase, Building, Database, DollarSign, FileText, Globe, MapPin, PhoneCall, Target, Users } from 'lucide-react';
+import Cookies from 'js-cookie'; 
 import React, { useEffect, useState } from 'react';
 
 // CSS styles without Tailwind

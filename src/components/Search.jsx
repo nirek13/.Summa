@@ -39,71 +39,83 @@ const InvestorDatabase = () => {
         const savedData = JSON.parse(localStorage.getItem("startupSignupData"));
         const hasCalledApi = localStorage.getItem("hasCalledVcMatcherApi") === "true";
         const cachedResults = localStorage.getItem("vcMatcherResults");
-
-        if (savedData) {
-            // If we have cached results, use them
-            if (hasCalledApi && cachedResults) {
-                try {
-                    const parsedResults = JSON.parse(cachedResults);
-                    console.log("Using cached VC matches:", parsedResults);
-                    // Set your investors state here if needed
-                    setIsLoading(false);
-                    return;
-                } catch (err) {
-                    console.error("Error parsing cached results:", err);
-                    // Continue with API call if cache parsing fails
-                }
-            }
-
-            // Call API if we haven't before
-            if (!hasCalledApi) {
-                setApiLoading(true);
-                startLoadingAnimation();
-
-                const payload = {
-                    industry: savedData.industry || "",
-                    stage: savedData.stage || "",
-                    business_model: savedData.businessModel || "",
-                    location: savedData.location || "",
-                    traction: savedData.traction || "",
-                    team: savedData.teamExperience || "",
-                    pitch: savedData.pitchSummary || "",
-                    preferred_check_size: formatCheckSize(savedData.checkSizeMin, savedData.checkSizeMax),
-                };
-
-                console.log("Sending payload:", payload);
-
-                fetch("https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log("VC Matches:", data);
-                        // Save results to localStorage to avoid future API calls
-                        localStorage.setItem("vcMatcherResults", JSON.stringify(data));
-                        localStorage.setItem("hasCalledVcMatcherApi", "true");
-                        // You can save it to state here if needed
-                        setInvestors(data);
-                        setApiLoading(false);
-                        setIsLoading(false);
-                    })
-                    .catch(err => {
-                        console.error("Error fetching VC matches:", err);
-                        setError("Failed to fetch investor matches. Please try again later.");
-                        setApiLoading(false);
-                        setIsLoading(false);
-                    });
-            } else {
-                // We've called the API before but don't have valid cached results
-                setIsLoading(false);
-            }
-        } else {
-            // No saved data, so we're done loading
+      
+        // Helper to fetch CSV for non-signed-in users
+        const fetchDefaultCSV = async () => {
+          try {
+            // Example: fetch from "public/data/investors_cleaned.csv"
+            const response = await fetch("/data/investors_cleaned.csv");
+            const csvText = await response.text();
+            const parsed = parseCSV(csvText);
+            setInvestors(parsed);
             setIsLoading(false);
+          } catch (err) {
+            console.error("Error loading default CSV:", err);
+            setError("Failed to load default investor data.");
+            setIsLoading(false);
+          }
+        };
+      
+        // If user is NOT signed up => fetch default CSV data
+        if (!savedData) {
+          fetchDefaultCSV();
+          return;
         }
-    }, []);
+      
+        // If the user has already called the API and cached results exist
+        if (hasCalledApi && cachedResults) {
+          try {
+            const parsedResults = JSON.parse(cachedResults);
+            console.log("Using cached VC matches:", parsedResults);
+            setInvestors(parsedResults);
+            setIsLoading(false);
+            return;
+          } catch (err) {
+            console.error("Error parsing cached results:", err);
+            // We'll fall through to the API call if parsing fails
+          }
+        }
+      
+        // Otherwise, we need to call the API (only once) 
+        // or you can keep it behind a condition if you prefer
+        setApiLoading(true);
+        startLoadingAnimation();
+      
+        const payload = {
+          industry: savedData.industry || "",
+          stage: savedData.stage || "",
+          business_model: savedData.businessModel || "",
+          location: savedData.location || "",
+          traction: savedData.traction || "",
+          team: savedData.teamExperience || "",
+          pitch: savedData.pitchSummary || "",
+          preferred_check_size: formatCheckSize(savedData.checkSizeMin, savedData.checkSizeMax),
+        };
+      
+        console.log("Sending payload:", payload);
+      
+        fetch("https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then(res => res.json())
+          .then(data => {
+            console.log("VC Matches:", data);
+            localStorage.setItem("vcMatcherResults", JSON.stringify(data));
+            localStorage.setItem("hasCalledVcMatcherApi", "true");
+            setInvestors(data);
+            setApiLoading(false);
+            setIsLoading(false);
+          })
+          .catch(err => {
+            console.error("Error fetching VC matches:", err);
+            setError("Failed to fetch investor matches. Please try again later.");
+            setApiLoading(false);
+            setIsLoading(false);
+          });
+      }, []);
+      
 
     // Function to animate the loading progress
     const startLoadingAnimation = () => {
