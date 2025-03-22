@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import Navbar from "./components/navbar";  // Capitalized component name
 import Home from "./components/landing";
 import SignupFlow from "./components/signup";  // Correct component name
-import InvestorDatabase from "./components/Search";  // Correct component name
+import InvestorDatabase from "./components/Search";
+import MultimodalChatbot from "./components/chat";  // Correct component name
 const App = () => {
 
 
@@ -16,6 +17,7 @@ const App = () => {
 
                 <Route path="/" element={<Home />} />
                 <Route path="/signup" element={<SignupFlow />} />
+                <Route path="/chat" element={<MultimodalChatbot />} />
                 <Route path="/investors" element={<InvestorDatabase />} />
             </Routes>
         </div>

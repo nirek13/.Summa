@@ -127,8 +127,10 @@ const NavbarPage = () => {
                             <a href="#company" style={styles.navLink}>Company</a>
                         </div>
                         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
+                            <a href="/chat" style={{...styles.navLink, fontWeight: '600'}}>Chat</a>
                             <a href="/investors" style={{...styles.navLink, fontWeight: '600'}}>Database</a>
-                            <a href="/signup" style={{...styles.navLink, fontWeight: '600', color: '#6366f1'}}>Sign up</a>
+                            <a href="/signup" style={{...styles.navLink, fontWeight: '600', color: '#6366f1'}}>Sign
+                                up</a>
                             <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
