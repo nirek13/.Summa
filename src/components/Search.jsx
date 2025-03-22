@@ -1,54 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import './InvestorDatabase.css'; // We'll define this CSS file below
+import './InvestorDatabase.css';
 
 const InvestorDatabase = () => {
-    // Parse the CSV data
-    const rawData = `Investor Name,Geography,Check Size,Stages,Investment Thesis,Contact Info
-Rhodium Ventures Family office,Israel USA +1,$50k to $1M,1. Idea or Patent 2. Prototype +3,"We invest in Internet & Impact, globally",rhodium746@investco.org
-NGP Capital VC firm,USA China +4,$5M to $10M,3. Early Revenue,"We invest in early-stage B2B companies from Series A onwards in Europe, the US, Israel, and China within enterprise...",ngp899@investco.org
-Nahim Bin Moussa Solo angel,Bahrain Kuwait +4,$1k to $25k,2. Prototype 3. Early Revenue +1,"I invest in MENA-based startups with $100k-$1m+ in revenue, and 15%+ MoM growth",nahim710@vcfirm.com
-Techmind Angel network,France Spain +1,$50k to $1M,1. Idea or Patent 2. Prototype +2,We invest in early stage startups based in Europe.,techmind551@vcfirm.com
-Sentor Investments Family office,Indonesia Singapore +3,$50k to $1M,3. Early Revenue 4. Scaling +2,We invest in many sectors and across numerous regions. We have an open mandate to invest in scale up and growth stage...,sentor209@startuplab.net
-Haatch VC firm,UK,$150k to $620k,1. Idea or Patent 2. Prototype +1,We invest in UK-based B2B SaaS pre-seed or seed stage start-ups. Haatch is industry-agnostic with a portfolio across...,haatch256@investco.org
-Pario Ventures VC firm,USA UK,$100k to $20M,2. Prototype 3. Early Revenue +3,"We invest in Automotive, Mobility, Fintech, Oil and Gas, and open to other areas if the right deal. Blockchain startups...",pario157@investco.org
-OVC Ventures Angel network,UK USA +25,$150k to $1.5M,3. Early Revenue 4. Scaling +1,"We invest in all sectors, move fast (two weeks), have a high preference for startups that can demonstrate initial...",ovc166@vcfirm.com
-NVP Norwest Venture Pa... VC firm,Canada USA +2,$500k to $10M,1. Idea or Patent 2. Prototype +4,"We invest in all verticals with a focus on healthcare, consumer, enterprise...",nvp302@vcfirm.com
-UVC Partners VC firm,Germany Switzerland +6,$500k to $5M,2. Prototype 3. Early Revenue +1,"We invest in early-stage B2B tech startups in Europe in the fields of Enteprise Software, Industrial Technologies and...",uvc895@vcfirm.com`;
+    // States
+    const [investors, setInvestors] = useState([]);
+    const [filteredInvestors, setFilteredInvestors] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [typeFilter, setTypeFilter] = useState('All');
+    const [regionFilter, setRegionFilter] = useState('All');
+    const [stageFilter, setStageFilter] = useState('All');
+    const [checkSizeFilter, setCheckSizeFilter] = useState('All');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch CSV data from public folder
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch('/investors_with_contact.csv');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                const parsedData = parseCSV(csvText);
+                setInvestors(parsedData);
+                setFilteredInvestors(parsedData);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Error fetching CSV file:", error);
+                setError("Failed to load investor data. Please try again later.");
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // Parse CSV into array of objects
     const parseCSV = (csv) => {
         const lines = csv.split('\n');
         const headers = lines[0].split(',');
 
-        return lines.slice(1).map(line => {
+        return lines.slice(1).filter(line => line.trim()).map(line => {
             // Handle commas in quoted fields
-            const regex = /(".*?"|[^",]+)(?=\s*,|\s*$)/g;
-            const parts = line.match(regex) || [];
+            const result = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(currentField);
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+
+            // Add the last field
+            result.push(currentField);
 
             const obj = {};
-            parts.forEach((part, i) => {
+            result.forEach((field, i) => {
                 // Remove quotes if present
-                const value = part.startsWith('"') && part.endsWith('"')
-                    ? part.slice(1, -1)
-                    : part;
+                const value = field.startsWith('"') && field.endsWith('"')
+                    ? field.slice(1, -1)
+                    : field;
                 obj[headers[i]] = value;
             });
 
             return obj;
         });
     };
-
-    const investorData = parseCSV(rawData);
-
-    // States
-    const [investors, setInvestors] = useState(investorData);
-    const [filteredInvestors, setFilteredInvestors] = useState(investorData);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [typeFilter, setTypeFilter] = useState('All');
-    const [regionFilter, setRegionFilter] = useState('All');
-    const [stageFilter, setStageFilter] = useState('All');
-    const [checkSizeFilter, setCheckSizeFilter] = useState('All');
-    const [isLoading, setIsLoading] = useState(false);
 
     // Extract unique values for filters
     const getInvestorTypes = () => {
@@ -98,6 +124,8 @@ UVC Partners VC firm,Germany Switzerland +6,$500k to $5M,2. Prototype 3. Early R
 
     // Filter function
     useEffect(() => {
+        if (investors.length === 0) return;
+
         setIsLoading(true);
 
         const timer = setTimeout(() => {
@@ -193,6 +221,16 @@ UVC Partners VC firm,Germany Switzerland +6,$500k to $5M,2. Prototype 3. Early R
             .replace(' Solo angel', '')
             .replace('...', '');
     };
+
+    if (error) {
+        return (
+            <div className="error-container">
+                <h2>Error</h2>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()}>Try Again</button>
+            </div>
+        );
+    }
 
     return (
         <div className="app-container">
@@ -354,8 +392,8 @@ UVC Partners VC firm,Germany Switzerland +6,$500k to $5M,2. Prototype 3. Early R
                                             const stageNum = stage.trim().replace(',', '');
                                             return (
                                                 <span key={i} className="stage-tag">
-                          {stageMap[stageNum] || stageNum}
-                        </span>
+                                                    {stageMap[stageNum] || stageNum}
+                                                </span>
                                             );
                                         })}
                                     </div>
