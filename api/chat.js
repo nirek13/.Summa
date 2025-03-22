@@ -33,9 +33,9 @@ User message: ${message}
     return res.status(200).json({ text: geminiReply });
   } catch (error) {
     console.error("❗ Serverless error:", error);
-    return res.status(500).json({
-      text: "Sorry, there was an error processing your request.",
-      error: error.message,
-    });
+return res.status(500).json({
+  text: "Sorry, there was an error processing your request.",
+  error: error.message || error.toString()   // 👈 ADD THIS
+});
   }
 };
