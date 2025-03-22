@@ -45,6 +45,8 @@ const styles = {
         fontWeight: 600,
         letterSpacing: '-0.5px',
         color: '#333333',
+        textDecoration: 'none',
+        cursor: 'pointer',
     },
     logoColorDot: {
         display: 'inline-block',
@@ -126,10 +128,10 @@ const NavbarPage = () => {
             <nav style={scrolled ? {...styles.navbar, ...styles.navbarScrolled} : styles.navbar}>
                 <div style={styles.container}>
                     <div style={styles.navContent}>
-                        <div style={styles.logo}>
+                        <a href="/" style={styles.logo}>
                             <span style={styles.logoColorDot}></span>
                             summa
-                        </div>
+                        </a>
                         <div style={styles.navLinks}>
                             <a href="#platform" style={styles.navLink}>Platform</a>
                             <a href="#solutions" style={styles.navLink}>Solutions</a>
