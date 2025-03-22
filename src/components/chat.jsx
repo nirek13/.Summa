@@ -306,11 +306,13 @@ const MultimodalChatbot = () => {
 
     try {
       // Request the server for an AI response
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputMessage })
-      });      
+      const response = await fetch("https://genaigenissis.onrender.com/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
       const data = await response.json();
       setIsTyping(false);
 
@@ -629,7 +631,7 @@ const MultimodalChatbot = () => {
         }
         .image-preview {
           width: 80px;
-          height: 80px; 
+          height: 80px;
           border-radius: 8px;
           overflow: hidden;
           position: relative;
