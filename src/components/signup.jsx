@@ -4,7 +4,7 @@ import { ArrowRight, Briefcase, DollarSign, MapPin, BarChart2, Users, FileText, 
 // CSS styles without Tailwind
 const styles = {
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FAFBFD',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -15,9 +15,9 @@ const styles = {
     formContainer: {
         width: '100%',
         maxWidth: '640px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FAFBFD',
         borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 4px 12px rgba(50, 50, 50, 0.1)',
         padding: '32px'
     },
     progressContainer: {
@@ -26,13 +26,13 @@ const styles = {
     progressBar: {
         height: '8px',
         width: '100%',
-        backgroundColor: '#F0F0F0',
+        backgroundColor: '#B6C2CE',
         borderRadius: '9999px',
         overflow: 'hidden'
     },
     progressIndicator: {
         height: '100%',
-        backgroundColor: '#007BFF',
+        backgroundColor: '#4D766E',
         transition: 'width 0.3s ease-in-out'
     },
     progressLabels: {
@@ -40,7 +40,7 @@ const styles = {
         justifyContent: 'space-between',
         marginTop: '8px',
         fontSize: '12px',
-        color: '#7A7A7A'
+        color: '#688990'
     },
     formSection: {
         marginBottom: '24px'
@@ -52,12 +52,12 @@ const styles = {
     title: {
         fontSize: '28px',
         fontWeight: 'bold',
-        color: '#333333',
+        color: '#323232',
         marginBottom: '8px'
     },
     subtitle: {
         fontSize: '16px',
-        color: '#7A7A7A',
+        color: '#688990',
         marginTop: '8px'
     },
     formRow: {
@@ -65,7 +65,7 @@ const styles = {
     },
     label: {
         display: 'block',
-        color: '#333333',
+        color: '#323232',
         fontSize: '14px',
         fontWeight: '500',
         marginBottom: '8px'
@@ -78,27 +78,27 @@ const styles = {
         width: '20px',
         height: '20px',
         marginRight: '8px',
-        color: '#007BFF'
+        color: '#4D766E'
     },
     input: {
         width: '100%',
         padding: '12px',
-        backgroundColor: '#F8F9FA',
-        border: '1px solid #E0E0E0',
+        backgroundColor: '#FAFBFD',
+        border: '1px solid #B6C2CE',
         borderRadius: '8px',
         fontSize: '16px',
         outline: 'none',
         transition: 'all 0.2s ease'
     },
     inputFocus: {
-        borderColor: '#007BFF',
-        boxShadow: '0 0 0 2px rgba(0, 123, 255, 0.25)'
+        borderColor: '#4D766E',
+        boxShadow: '0 0 0 2px rgba(77, 118, 110, 0.25)'
     },
     select: {
         width: '100%',
         padding: '12px',
-        backgroundColor: '#F8F9FA',
-        border: '1px solid #E0E0E0',
+        backgroundColor: '#FAFBFD',
+        border: '1px solid #B6C2CE',
         borderRadius: '8px',
         fontSize: '16px',
         outline: 'none',
@@ -107,8 +107,8 @@ const styles = {
     textarea: {
         width: '100%',
         padding: '12px',
-        backgroundColor: '#F8F9FA',
-        border: '1px solid #E0E0E0',
+        backgroundColor: '#FAFBFD',
+        border: '1px solid #B6C2CE',
         borderRadius: '8px',
         fontSize: '16px',
         minHeight: '120px',
@@ -118,7 +118,7 @@ const styles = {
     },
     helpText: {
         fontSize: '12px',
-        color: '#7A7A7A',
+        color: '#688990',
         marginTop: '4px'
     },
     buttonContainer: {
@@ -135,22 +135,22 @@ const styles = {
         transition: 'all 0.2s ease'
     },
     primaryButton: {
-        backgroundColor: '#007BFF',
-        color: '#FFFFFF',
+        backgroundColor: '#4D766E',
+        color: '#FAFBFD',
         border: 'none',
         display: 'flex',
         alignItems: 'center'
     },
     primaryButtonHover: {
-        backgroundColor: '#0056b3'
+        backgroundColor: '#323232'
     },
     secondaryButton: {
-        backgroundColor: '#FFFFFF',
-        color: '#333333',
-        border: '1px solid #E0E0E0'
+        backgroundColor: '#FAFBFD',
+        color: '#323232',
+        border: '1px solid #B6C2CE'
     },
     secondaryButtonHover: {
-        backgroundColor: '#F8F9FA'
+        backgroundColor: '#B6C2CE'
     },
     buttonIcon: {
         marginLeft: '8px',
@@ -159,8 +159,8 @@ const styles = {
     },
     infoCard: {
         padding: '16px',
-        backgroundColor: '#EBF5FF',
-        border: '1px solid #CCE5FF',
+        backgroundColor: '#F0F4F5',
+        border: '1px solid #B6C2CE',
         borderRadius: '8px',
         marginBottom: '24px'
     },
@@ -170,12 +170,12 @@ const styles = {
     },
     infoCardTitle: {
         fontWeight: '500',
-        color: '#0056b3',
+        color: '#4D766E',
         marginBottom: '4px'
     },
     infoCardText: {
         fontSize: '14px',
-        color: '#0066CC'
+        color: '#688990'
     },
     listContainer: {
         marginTop: '8px',
@@ -186,12 +186,12 @@ const styles = {
         alignItems: 'center',
         marginBottom: '4px',
         fontSize: '14px',
-        color: '#0066CC'
+        color: '#688990'
     },
     listDot: {
         width: '6px',
         height: '6px',
-        backgroundColor: '#007BFF',
+        backgroundColor: '#4D766E',
         borderRadius: '50%',
         marginRight: '8px'
     },
@@ -210,7 +210,7 @@ const styles = {
     successIcon: {
         width: '64px',
         height: '64px',
-        backgroundColor: '#E6F7EB',
+        backgroundColor: '#F0F4F5',
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
@@ -221,11 +221,11 @@ const styles = {
     successIconInner: {
         width: '32px',
         height: '32px',
-        color: '#10B981'
+        color: '#4D766E'
     },
     nextStepsCard: {
-        backgroundColor: '#F8F9FA',
-        border: '1px solid #E0E0E0',
+        backgroundColor: '#FAFBFD',
+        border: '1px solid #B6C2CE',
         borderRadius: '8px',
         padding: '24px',
         maxWidth: '480px',
@@ -234,7 +234,7 @@ const styles = {
     },
     nextStepsList: {
         textAlign: 'left',
-        color: '#4B5563',
+        color: '#323232',
         margin: '0',
         padding: '0',
         listStyleType: 'none'
@@ -245,7 +245,7 @@ const styles = {
     },
     nextStepsNumber: {
         fontWeight: '500',
-        color: '#007BFF',
+        color: '#4D766E',
         marginRight: '8px'
     }
 };
@@ -448,8 +448,8 @@ const SignupFlow = () => {
                             <button
                                 onClick={nextStep}
                                 style={{...styles.button, ...styles.primaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                             >
                                 Continue <ArrowRight style={styles.buttonIcon} />
                             </button>
@@ -513,8 +513,8 @@ const SignupFlow = () => {
                             <button
                                 onClick={nextStep}
                                 style={{...styles.button, ...styles.primaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                             >
                                 Continue <ArrowRight style={styles.buttonIcon} />
                             </button>
@@ -601,8 +601,8 @@ const SignupFlow = () => {
                             <button
                                 onClick={nextStep}
                                 style={{...styles.button, ...styles.primaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                             >
                                 Continue <ArrowRight style={styles.buttonIcon} />
                             </button>
@@ -693,8 +693,8 @@ const SignupFlow = () => {
                             <button
                                 onClick={nextStep}
                                 style={{...styles.button, ...styles.primaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                             >
                                 Find My Matches <ArrowRight style={styles.buttonIcon} />
                             </button>
