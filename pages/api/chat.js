@@ -1,56 +1,56 @@
-// api/chat.js
+/**
+ * pages/api/chat.js
+ * This route:
+ *  - Reads a PaLM API key from Vercel env var
+ *  - Lists available models
+ *  - Uses "text-bison-001" to generate text
+ */
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 module.exports = async (req, res) => {
-  // Allow only POST requests
+  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ text: "Method not allowed. Use POST." });
   }
 
+  // Get your PaLM API key from environment
+  const apiKey = process.env.PALM_API_KEY; // or GEMINI_API_KEY, whichever name you set
+  if (!apiKey) {
+    console.error("❌ Missing PALM_API_KEY environment variable.");
+    return res.status(500).json({ text: "Server error: missing API key." });
+  }
+
   try {
-    // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("❌ Missing GEMINI_API_KEY in environment variables.");
-      return res.status(500).json({
-        text: "Server misconfiguration: missing Gemini API key."
-      });
-    }
-
-    // Initialize Gemini client
+    // Initialize the client
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0' });
 
-    // Extract message and attachments from request body
-    const { message = '', attachments = [] } = req.body;
+    // DEBUG: List available models to confirm which ones you have
+    const availableModels = await genAI.listModels();
+    console.log("✅ Available models:", availableModels);
 
-    // Construct prompt for Gemini
-    const attachmentNames = attachments.map(a => a.name).join(', ');
-    let prompt = `
-You are the CFO of a fast-growing tech startup.
-Respond to questions with clear, concise, and professional financial advice.
-Use startup-friendly financial language and provide only relevant details.
-Avoid rambling, and keep answers to 2-4 short paragraphs unless the user asks for more detail.
-Use simple examples or basic numbers to illustrate points when needed.
+    // For a text completion model, use "models/text-bison-001"
+    // NOTE: for Chat model, you'd use "models/chat-bison-001" with generateMessage()
+    const model = genAI.getModel({ model: 'models/text-bison-001' });
 
-User message: ${message}
-`;
+    // Extract the user message from the request body
+    const { message = '' } = req.body;
 
-    if (attachments.length > 0) {
-      prompt += `\n\n[Attached files: ${attachmentNames}]`;
-    }
+    // Generate text from "text-bison-001"
+    const result = await model.generateText({
+      prompt: message || 'Hello!',
+    });
 
-    // Send prompt to Gemini
-    const result = await model.generateContent(prompt);
-    const geminiReply = result?.response?.text() ?? "No response from Gemini.";
+    // The bison result is typically in result.candidates[0].output
+    const bisonReply = result?.candidates?.[0]?.output || "No reply from text-bison-001";
 
-    return res.status(200).json({ text: geminiReply });
+    // Send it back to the client
+    return res.status(200).json({ text: bisonReply });
 
   } catch (error) {
-    console.error("❗ Gemini API Error:", error);
+    console.error("❗ PaLM API Error:", error);
     return res.status(500).json({
-      text: "Sorry, there was a server error while processing your request.",
+      text: "Sorry, an error occurred.",
       error: error.message || error.toString(),
     });
   }
