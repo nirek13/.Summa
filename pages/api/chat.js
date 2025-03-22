@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
 
     // Initialize Gemini client
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0' });
+    const model = genAI.getGenerativeModel({ model: 'text-bison-001' });
 
     // Extract message and attachments from request body
     const { message = '', attachments = [] } = req.body;
