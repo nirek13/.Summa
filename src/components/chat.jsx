@@ -309,11 +309,8 @@ const MultimodalChatbot = () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: inputMessage,
-          attachments
-        })
-      });
+        body: JSON.stringify({ message: inputMessage })
+      });      
       const data = await response.json();
       setIsTyping(false);
 
@@ -632,7 +629,7 @@ const MultimodalChatbot = () => {
         }
         .image-preview {
           width: 80px;
-          height: 80px;
+          height: 80px; 
           border-radius: 8px;
           overflow: hidden;
           position: relative;
