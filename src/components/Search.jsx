@@ -6760,6 +6760,7 @@ Tri-Valley Ventures Other,USA,N/A,N/A,,
 
                         return (
                             <div key={index} className="investor-card">
+
                                 <div className="card-content">
                                     <div className="card-header">
                                         <h2>{cleanName}</h2>
