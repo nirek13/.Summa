@@ -1,336 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// Sign In Component
-const SignInForm = ({ onClose }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [remember, setRemember] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        // Validate inputs
-        if (!email || !password) {
-            setError('Please enter both email and password');
-            return;
-        }
-
-        // Reset error
-        setError('');
-
-        // Show loading state
-        setIsSubmitting(true);
-
-        // Simulate API call
-        setTimeout(() => {
-            // In a real app, you would call your authentication API here
-            console.log('Sign in attempt:', { email, password, remember });
-
-            // For demo purposes, always "succeed" after 1 second
-            setIsSubmitting(false);
-
-            // You could redirect or update app state here
-            alert('Successfully signed in!');
-
-            if (onClose) onClose();
-        }, 1000);
-    };
-
-    return (
-        <div style={signInStyles.formContainer}>
-            <div style={signInStyles.formHeader}>
-                <h2 style={signInStyles.formTitle}>Sign in to your account</h2>
-                <p style={signInStyles.formSubtitle}>
-                    Enter your credentials to access your dashboard
-                </p>
-            </div>
-
-            {error && (
-                <div style={signInStyles.errorMessage}>
-                    {error}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-                <div style={signInStyles.formGroup}>
-                    <label htmlFor="email" style={signInStyles.label}>
-                        Email address
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        style={signInStyles.input}
-                        disabled={isSubmitting}
-                    />
-                </div>
-
-                <div style={signInStyles.formGroup}>
-                    <div style={signInStyles.passwordHeader}>
-                        <label htmlFor="password" style={signInStyles.label}>
-                            Password
-                        </label>
-                        <a href="#forgot" style={signInStyles.forgotLink}>
-                            Forgot password?
-                        </a>
-                    </div>
-                    <input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        style={signInStyles.input}
-                        disabled={isSubmitting}
-                    />
-                </div>
-
-                <div style={signInStyles.rememberContainer}>
-                    <label style={signInStyles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            checked={remember}
-                            onChange={() => setRemember(!remember)}
-                            style={signInStyles.checkbox}
-                            disabled={isSubmitting}
-                        />
-                        <span style={signInStyles.checkboxText}>Remember me</span>
-                    </label>
-                </div>
-
-                <button
-                    type="submit"
-                    style={isSubmitting ? {...signInStyles.submitButton, ...signInStyles.submitButtonDisabled} : signInStyles.submitButton}
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? 'Signing in...' : 'Sign in'}
-                </button>
-            </form>
-
-            <div style={signInStyles.divider}>
-                <span style={signInStyles.dividerText}>Or continue with</span>
-            </div>
-
-            <div style={signInStyles.socialButtons}>
-                <button style={signInStyles.socialButton}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31024 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
-                        <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"/>
-                        <path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"/>
-                        <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.25 12.0004 19.25C8.8704 19.25 6.21537 17.14 5.2654 14.295L1.27539 17.39C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853"/>
-                    </svg>
-                    <span>Google</span>
-                </button>
-                <button style={signInStyles.socialButton}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M22.675 0H1.325C0.593 0 0 0.593 0 1.325V22.676C0 23.407 0.593 24 1.325 24H12.82V14.706H9.692V11.084H12.82V8.413C12.82 5.313 14.713 3.625 17.479 3.625C18.804 3.625 19.942 3.724 20.274 3.768V7.008L18.356 7.009C16.852 7.009 16.561 7.724 16.561 8.772V11.085H20.148L19.681 14.707H16.561V24H22.677C23.407 24 24 23.407 24 22.675V1.325C24 0.593 23.407 0 22.675 0Z" fill="#1877F2"/>
-                    </svg>
-                    <span>Facebook</span>
-                </button>
-            </div>
-
-            <p style={signInStyles.signupText}>
-                Don't have an account? <a href="#signup" style={signInStyles.signupLink}>Sign up</a>
-            </p>
-        </div>
-    );
-};
-
-// Modal Component
-const Modal = ({ isOpen, onClose, children }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div style={modalStyles.overlay} onClick={onClose}>
-            <div style={modalStyles.container} onClick={e => e.stopPropagation()}>
-                <button style={modalStyles.closeButton} onClick={onClose}>
-                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-                {children}
-            </div>
-        </div>
-    );
-};
-
-// Styles for SignIn Component
-const signInStyles = {
-    formContainer: {
-        width: '100%',
-        maxWidth: '400px',
-        padding: '32px',
-    },
-    formHeader: {
-        marginBottom: '24px',
-        textAlign: 'center',
-    },
-    formTitle: {
-        fontSize: '24px',
-        fontWeight: '700',
-        color: '#333333',
-        marginBottom: '8px',
-    },
-    formSubtitle: {
-        fontSize: '16px',
-        color: '#555555',
-    },
-    formGroup: {
-        marginBottom: '20px',
-    },
-    label: {
-        display: 'block',
-        marginBottom: '8px',
-        fontSize: '14px',
-        fontWeight: '500',
-        color: '#333333',
-    },
-    input: {
-        width: '100%',
-        padding: '12px 16px',
-        fontSize: '16px',
-        borderRadius: '8px',
-        border: '1px solid #e5e7eb',
-        transition: 'all 0.2s ease',
-        outline: 'none',
-    },
-    passwordHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '8px',
-    },
-    forgotLink: {
-        fontSize: '14px',
-        color: '#6366f1',
-        textDecoration: 'none',
-    },
-    rememberContainer: {
-        display: 'flex',
-        marginBottom: '24px',
-    },
-    checkboxLabel: {
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-    },
-    checkbox: {
-        marginRight: '8px',
-    },
-    checkboxText: {
-        fontSize: '14px',
-        color: '#555555',
-    },
-    submitButton: {
-        width: '100%',
-        padding: '12px',
-        backgroundColor: '#333333',
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
-        fontSize: '16px',
-        fontWeight: '500',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-    },
-    submitButtonDisabled: {
-        backgroundColor: '#999999',
-        cursor: 'not-allowed',
-    },
-    divider: {
-        position: 'relative',
-        textAlign: 'center',
-        margin: '24px 0',
-    },
-    dividerText: {
-        display: 'inline-block',
-        padding: '0 16px',
-        backgroundColor: 'white',
-        color: '#6b7280',
-        fontSize: '14px',
-        position: 'relative',
-        zIndex: '1',
-    },
-    socialButtons: {
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '24px',
-    },
-    socialButton: {
-        flex: '1',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        padding: '10px',
-        backgroundColor: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-    },
-    signupText: {
-        textAlign: 'center',
-        fontSize: '14px',
-        color: '#555555',
-    },
-    signupLink: {
-        color: '#6366f1',
-        textDecoration: 'none',
-        fontWeight: '500',
-    },
-    errorMessage: {
-        backgroundColor: '#FEE2E2',
-        color: '#B91C1C',
-        padding: '12px',
-        borderRadius: '8px',
-        marginBottom: '16px',
-        fontSize: '14px',
-    }
-};
-
-// Styles for Modal Component
-const modalStyles = {
-    overlay: {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '100',
-    },
-    container: {
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        position: 'relative',
-        overflow: 'hidden',
-        maxWidth: '90%',
-        maxHeight: '90%',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: '12px',
-        right: '12px',
-        backgroundColor: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        color: '#6b7280',
-        padding: '4px',
-        borderRadius: '4px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '10',
-    }
-};
 
 // Styles as a separate object
 const styles = {
@@ -399,6 +67,9 @@ const styles = {
         color: '#333333',
         textDecoration: 'none',
         transition: 'color 0.2s ease',
+        ':hover': {
+            color: '#111827',
+        }
     },
     primaryButton: {
         display: 'inline-block',
@@ -412,6 +83,9 @@ const styles = {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         textDecoration: 'none',
+        ':hover': {
+            backgroundColor: '#111827',
+        }
     },
 
     // Hero Section - Updated to match Cohere style
@@ -432,6 +106,9 @@ const styles = {
         lineHeight: 1.2,
         marginBottom: '24px',
         color: '#333333',
+        '@media (min-width: 768px)': {
+            fontSize: '72px',
+        }
     },
     heroText: {
         fontSize: '22px',
@@ -446,6 +123,9 @@ const styles = {
         flexDirection: 'column',
         gap: '16px',
         justifyContent: 'center',
+        '@media (min-width: 640px)': {
+            flexDirection: 'row',
+        }
     },
     secondaryButton: {
         display: 'inline-block',
@@ -459,6 +139,9 @@ const styles = {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         textDecoration: 'none',
+        ':hover': {
+            backgroundColor: '#f3f4f6',
+        }
     },
 
     // Features Section
@@ -486,6 +169,9 @@ const styles = {
         display: 'grid',
         gridTemplateColumns: '1fr',
         gap: '32px',
+        '@media (min-width: 768px)': {
+            gridTemplateColumns: 'repeat(3, 1fr)',
+        }
     },
     featureCard: {
         backgroundColor: 'white',
@@ -493,6 +179,10 @@ const styles = {
         borderRadius: '12px',
         padding: '32px',
         transition: 'all 0.3s ease',
+        ':hover': {
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            transform: 'translateY(-5px)',
+        }
     },
     featureIcon: {
         width: '48px',
@@ -649,6 +339,10 @@ const styles = {
         flexDirection: 'column',
         gap: '16px',
         marginBottom: '32px',
+        '@media (min-width: 640px)': {
+            flexDirection: 'row',
+            justifyContent: 'center',
+        }
     },
     ctaInput: {
         width: '100%',
@@ -658,6 +352,13 @@ const styles = {
         fontSize: '16px',
         transition: 'all 0.2s ease',
         outline: 'none',
+        '@media (min-width: 640px)': {
+            width: '256px',
+        },
+        ':focus': {
+            boxShadow: '0 0 0 2px rgba(51, 51, 51, 0.2)',
+            borderColor: '#999999',
+        }
     },
     ctaNote: {
         color: '#6b7280',
@@ -675,6 +376,10 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '32px',
+        '@media (min-width: 768px)': {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+        }
     },
     footerLinks: {
         display: 'flex',
@@ -685,6 +390,9 @@ const styles = {
         color: '#555555',
         textDecoration: 'none',
         transition: 'color 0.2s ease',
+        ':hover': {
+            color: '#333333',
+        }
     },
     socialLinks: {
         display: 'flex',
@@ -700,6 +408,10 @@ const styles = {
         justifyContent: 'center',
         color: '#555555',
         transition: 'all 0.2s ease',
+        ':hover': {
+            backgroundColor: '#e5e7eb',
+            color: '#333333',
+        }
     },
     footerCopyright: {
         textAlign: 'center',
@@ -709,77 +421,10 @@ const styles = {
     }
 };
 
-// Updated responsive styles for specific media queries
-const mediaStyles = {
-    heroTitleLarge: {
-        '@media (min-width: 768px)': {
-            fontSize: '72px',
-        }
-    },
-    buttonGroupRow: {
-        '@media (min-width: 640px)': {
-            flexDirection: 'row',
-        }
-    },
-    featuresGridThreeColumns: {
-        '@media (min-width: 768px)': {
-            gridTemplateColumns: 'repeat(3, 1fr)',
-        }
-    },
-    ctaFormRow: {
-        '@media (min-width: 640px)': {
-            flexDirection: 'row',
-            justifyContent: 'center',
-        }
-    },
-    ctaInputNarrow: {
-        '@media (min-width: 640px)': {
-            width: '256px',
-        }
-    },
-    footerContentRow: {
-        '@media (min-width: 768px)': {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-        }
-    },
-    navLinksShow: {
-        '@media (min-width: 768px)': {
-            display: 'flex',
-        }
-    }
-};
-
 const SummaLandingPage = () => {
     const [email, setEmail] = useState('');
     const [scrolled, setScrolled] = useState(false);
     const [activeTab, setActiveTab] = useState('analyze');
-    // Add missing state for sign-in modal
-    const [isSignInOpen, setIsSignInOpen] = useState(false);
-
-    // Add missing functions for sign-in modal
-    const openSignIn = (e) => {
-        e.preventDefault();
-        setIsSignInOpen(true);
-    };
-
-    const closeSignIn = () => {
-        setIsSignInOpen(false);
-    };
-
-    // Apply media query styles manually
-    const getResponsiveStyle = (baseStyle, mediaStyle) => {
-        if (typeof window !== 'undefined') {
-            // Check if we're in browser environment (for SSR compatibility)
-            if (window.innerWidth >= 768 && mediaStyle['@media (min-width: 768px)']) {
-                return { ...baseStyle, ...mediaStyle['@media (min-width: 768px)'] };
-            }
-            if (window.innerWidth >= 640 && mediaStyle['@media (min-width: 640px)']) {
-                return { ...baseStyle, ...mediaStyle['@media (min-width: 640px)'] };
-            }
-        }
-        return baseStyle;
-    };
 
     // Handle scroll for navbar effect
     useEffect(() => {
@@ -795,17 +440,6 @@ const SummaLandingPage = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Handle window resize for responsive styles
-    useEffect(() => {
-        const handleResize = () => {
-            // Force a re-render to apply responsive styles
-            setScrolled(scrolled);
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, [scrolled]);
-
     return (
         <div style={styles.pageWrapper}>
             {/* Navigation */}
@@ -816,7 +450,7 @@ const SummaLandingPage = () => {
                             <span style={styles.logoColorDot}></span>
                             summa
                         </div>
-                        <div style={getResponsiveStyle(styles.navLinks, mediaStyles.navLinksShow)}>
+                        <div style={styles.navLinks}>
                             <a href="#platform" style={styles.navLink}>Platform</a>
                             <a href="#solutions" style={styles.navLink}>Solutions</a>
                             <a href="#research" style={styles.navLink}>Research</a>
@@ -824,24 +458,19 @@ const SummaLandingPage = () => {
                             <a href="#company" style={styles.navLink}>Company</a>
                         </div>
                         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-                            <a href="#signin" onClick={openSignIn} style={{...styles.navLink, fontWeight: '600'}}>Sign in</a>
+                            <a href="#signin" style={{...styles.navLink, fontWeight: '600'}}>Sign in</a>
                             <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
                 </div>
             </nav>
 
-            {/* Sign In Modal */}
-            <Modal isOpen={isSignInOpen} onClose={closeSignIn}>
-                <SignInForm onClose={closeSignIn} />
-            </Modal>
-
             <div style={styles.container}>
                 {/* Hero section */}
                 <section style={styles.heroSection}>
                     <div style={styles.heroContent}>
-                        <h1 style={getResponsiveStyle(styles.heroTitle, mediaStyles.heroTitleLarge)}>
-                            State-of-the-art<br/>
+                        <h1 style={styles.heroTitle}>
+                            State-of-the-art<br />
                             generative and retrieval models
                         </h1>
                         <p style={styles.heroText}>
