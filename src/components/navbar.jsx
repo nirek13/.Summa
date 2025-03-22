@@ -51,7 +51,7 @@ const styles = {
         width: '8px',
         height: '8px',
         borderRadius: '50%',
-        backgroundColor: '#6366f1',
+        backgroundColor: '#4D766E',
         marginRight: '4px',
         marginLeft: '2px',
     },
@@ -91,9 +91,7 @@ const styles = {
 };
 
 const NavbarPage = () => {
-    const [email, setEmail] = useState('');
     const [scrolled, setScrolled] = useState(false);
-    const [activeTab, setActiveTab] = useState('analyze');
 
     // Handle scroll for navbar effect
     useEffect(() => {
@@ -129,8 +127,7 @@ const NavbarPage = () => {
                         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
                             <a href="/chat" style={{...styles.navLink, fontWeight: '600'}}>Chat</a>
                             <a href="/investors" style={{...styles.navLink, fontWeight: '600'}}>Database</a>
-                            <a href="/signup" style={{...styles.navLink, fontWeight: '600', color: '#6366f1'}}>Sign
-                                up</a>
+                            <a href="/signup" style={{...styles.navLink, fontWeight: '600'}}>Sign up</a>
                             <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
