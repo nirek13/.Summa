@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, Briefcase, DollarSign, MapPin, BarChart2, Users, FileText, Building, Globe, Target, Database, PhoneCall } from 'lucide-react';
+import { ArrowRight, BarChart2, Briefcase, Building, Database, DollarSign, FileText, Globe, MapPin, PhoneCall, Target, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 // CSS styles without Tailwind
 const styles = {
@@ -736,18 +736,19 @@ const SignupFlow = () => {
                                 </li>
                             </ol>
                         </div>
-
-                        <button
-                            style={{...styles.button, ...styles.primaryButton, margin: '0 auto'}}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
-                            onClick={() => {
-                                alert("Form data has been saved to local storage!");
-                                console.log("Saved data:", JSON.parse(localStorage.getItem('startupSignupData')));
-                            }}
-                        >
-                            Go to Dashboard
-                        </button>
+                        <a href='/investors'>
+                            <button
+                                style={{...styles.button, ...styles.primaryButton, margin: '0 auto'}}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007BFF'}
+                                onClick={() => {
+                                    console.log("Saved data:", JSON.parse(localStorage.getItem('startupSignupData')));
+                                    alert('printed data')
+                                }}
+                            >
+                                Go to Dashboard
+                            </button>
+                        </a>
                     </div>
                 );
 
