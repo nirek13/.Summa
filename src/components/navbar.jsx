@@ -72,6 +72,18 @@ const styles = {
             color: '#111827',
         }
     },
+    // New styles for the specific links
+    specialNavLink: {
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#333333',
+        textDecoration: 'none',
+        transition: 'color 0.2s ease',
+    },
+    // Hover state styles
+    specialNavLinkHover: {
+        color: '#4D766E', // Using the same color as the dot in the logo
+    },
     primaryButton: {
         display: 'inline-block',
         backgroundColor: '#333333',
@@ -92,6 +104,7 @@ const styles = {
 
 const NavbarPage = () => {
     const [scrolled, setScrolled] = useState(false);
+    const [hoveredLink, setHoveredLink] = useState(null);
 
     // Handle scroll for navbar effect
     useEffect(() => {
@@ -125,9 +138,39 @@ const NavbarPage = () => {
                             <a href="#company" style={styles.navLink}>Company</a>
                         </div>
                         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-                            <a href="/chat" style={{...styles.navLink, fontWeight: '600'}}>Chat</a>
-                            <a href="/investors" style={{...styles.navLink, fontWeight: '600'}}>Database</a>
-                            <a href="/signup" style={{...styles.navLink, fontWeight: '600'}}>Sign up</a>
+                            <a 
+                                href="/chat" 
+                                style={{
+                                    ...styles.specialNavLink,
+                                    ...(hoveredLink === 'chat' ? styles.specialNavLinkHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredLink('chat')}
+                                onMouseLeave={() => setHoveredLink(null)}
+                            >
+                                Chat
+                            </a>
+                            <a 
+                                href="/investors" 
+                                style={{
+                                    ...styles.specialNavLink,
+                                    ...(hoveredLink === 'database' ? styles.specialNavLinkHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredLink('database')}
+                                onMouseLeave={() => setHoveredLink(null)}
+                            >
+                                Database
+                            </a>
+                            <a 
+                                href="/signup" 
+                                style={{
+                                    ...styles.specialNavLink,
+                                    ...(hoveredLink === 'signup' ? styles.specialNavLinkHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredLink('signup')}
+                                onMouseLeave={() => setHoveredLink(null)}
+                            >
+                                Sign up
+                            </a>
                             <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
