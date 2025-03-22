@@ -127,6 +127,7 @@ const NavbarPage = () => {
                         </div>
                         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
                             <a href="#signin" style={{...styles.navLink, fontWeight: '600'}}>Sign in</a>
+                            <a href="#signup" style={{...styles.navLink, fontWeight: '600', color: '#6366f1'}}>Sign up</a>
                             <button style={styles.primaryButton}>Request a demo</button>
                         </div>
                     </div>
