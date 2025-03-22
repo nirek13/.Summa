@@ -5,7 +5,7 @@ import SummaLandingPage from "./components/landing";
 function App() {
   return (
     <div className="App">
-      <SummaLandingPage />
+      <SummaLandingPage
     </div>
   );
 }
