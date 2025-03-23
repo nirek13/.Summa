@@ -15,6 +15,7 @@
     "framer-motion": "^12.5.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.483.0",
+    "papaparse": "^5.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.30.0",
