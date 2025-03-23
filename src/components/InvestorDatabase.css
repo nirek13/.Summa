@@ -294,8 +294,10 @@ input:checked + .toggle-slider:before {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* Make the row content a horizontal flex container */
 .row-content {
-    display: flex;
+    display: flex;          /* horizontal layout */
+    align-items: flex-start; /* keep items aligned at top by default */
     width: 100%;
     padding: 20px;
 }
@@ -309,19 +311,25 @@ input:checked + .toggle-slider:before {
     margin-right: 20px;
 }
 
+/* Main text area can grow */
 .row-main {
     flex: 1;
     display: flex;
     flex-direction: column;
+    /* text sits at the top by default */
 }
 
+/*
+  The buttons container is placed at the bottom-right:
+  - margin-left: auto => pushes it to the far right
+  - align-self: flex-end => pins it to the bottom if row-content is tall
+*/
 .row-actions {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    justify-content: center;
-    min-width: 160px;
-    margin-left: 20px;
+    flex-direction: row;
+    gap: 12px;
+    margin-left: auto;
+    align-self: flex-end;
 }
 
 /* Ranking display with offsets */
@@ -431,6 +439,7 @@ input:checked + .toggle-slider:before {
 
 /* Contact button */
 .contact-button {
+    display: inline-block;
     padding: 6px 12px;
     font-size: 14px;
     background-color: #4477aa;
@@ -448,6 +457,7 @@ input:checked + .toggle-slider:before {
 
 /* Summarize with Gemini button */
 .gemini-summarize-button {
+    display: inline-block;
     padding: 6px 12px;
     font-size: 14px;
     background-color: #a855f7;
@@ -461,33 +471,6 @@ input:checked + .toggle-slider:before {
 
 .gemini-summarize-button:hover {
     background-color: #7e22ce;
-}
-
-/* Mobile responsiveness for result rows */
-@media (max-width: 768px) {
-    .row-content {
-        flex-direction: column;
-    }
-    .row-left {
-        flex-direction: row;
-        justify-content: flex-start;
-        margin-right: 0;
-        margin-bottom: 15px;
-    }
-    .rank-display {
-        flex-direction: row;
-        align-items: baseline;
-        padding-top: 0;
-    }
-    .rank-numerator {
-        margin-right: 5px;
-        left: 0;
-    }
-    .row-actions {
-        flex-direction: row;
-        margin-left: 0;
-        margin-top: 15px;
-    }
 }
 
 /* ----------------------------------
@@ -739,5 +722,76 @@ input:checked + .toggle-slider:before {
     50% {
         transform: translateY(-15px);
         opacity: 1;
+    }
+}
+
+/* Contact button (repeated for clarity) */
+.contact-button {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #4477aa;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contact-button:hover {
+    background-color: #335588;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.contact-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Summarize with Gemini button (repeated for clarity) */
+.gemini-summarize-button {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    /* Replace the solid color with a gradient */
+    background: linear-gradient(90deg, #6366f1 0%, #ec4899 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gemini-summarize-button:hover {
+    /* Slightly darker or shifted gradient on hover */
+    background: linear-gradient(90deg, #4f46e5 0%, #db2777 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.gemini-summarize-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .row-content {
+        flex-direction: column; /* Stack everything on mobile */
+        align-items: flex-start;
+    }
+    .row-actions {
+        margin-left: 0;
+        align-self: flex-start;
+        margin-top: 16px; /* push it down from the text */
     }
 }
