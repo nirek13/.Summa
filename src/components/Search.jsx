@@ -1,10 +1,61 @@
-import Papa from 'papaparse';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import './InvestorDatabase.css';
+import './InvestorDatabase.css'; // Your combined styles
+
+// Helper functions to generate filter values from the final, API-based investor list
+function getInvestorTypes(investors) {
+  const types = new Set();
+  investors.forEach((investor) => {
+    const name = investor['Investor Name'] || '';
+    if (name.includes('VC firm')) types.add('VC Firm');
+    else if (name.includes('Angel network')) types.add('Angel Network');
+    else if (name.includes('Family office')) types.add('Family Office');
+    else if (name.includes('Solo angel')) types.add('Solo Angel');
+    else if (name.includes('Startup studio')) types.add('Startup Studio');
+  });
+  return ['All', ...Array.from(types)];
+}
+
+function getRegions(investors) {
+  const regions = new Set();
+  investors.forEach((investor) => {
+    const geos = (investor.Geography || '').split(' ');
+    geos.forEach((geo) => {
+      if (!geo.includes('+')) {
+        regions.add(geo);
+      }
+    });
+  });
+  return ['All', ...Array.from(regions).sort()];
+}
+
+function getStages(investors) {
+  const stageMap = {
+    '1': 'Idea/Patent',
+    '2': 'Prototype',
+    '3': 'Early Revenue',
+    '4': 'Scaling',
+  };
+  const stages = new Set();
+  investors.forEach((investor) => {
+    const stageText = investor.Stages || '';
+    Object.entries(stageMap).forEach(([key, value]) => {
+      if (stageText.includes(`${key}.`)) {
+        stages.add(value);
+      }
+    });
+  });
+  return ['All', ...Array.from(stages)];
+}
+
+function getCheckSizes() {
+  return ['All', 'Under $100k', '$100k-$1M', '$1M-$5M', '$5M+'];
+}
 
 const InvestorDatabase = () => {
+  // -----------------------------
   // States
+  // -----------------------------
   const [investors, setInvestors] = useState([]);
   const [filteredInvestors, setFilteredInvestors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,103 +67,179 @@ const InvestorDatabase = () => {
   const [error, setError] = useState(null);
   const [sortAlphabetically, setSortAlphabetically] = useState(false);
 
-  // Function to fetch investor data
-  const fetchInvestorData = () => {
-    setIsLoading(true);
-    fetch('/data/investors_cleaned.csv')
-      .then((response) => response.text())
-      .then((csvText) => {
-        const parsedData = Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-        });
-        // Assume data is already ranked in the array
-        const rankedData = parsedData.data.map((investor, index) => ({
-          ...investor,
-          rank: index + 1,
-          // Set a default compatibility score between 0.1 and 1
-          compatibility_score: investor.compatibility_score
-        }));
-        setInvestors(rankedData);
-        setFilteredInvestors(rankedData);
+  // Additional states for loading animation & sign-in logic
+  const [apiLoading, setApiLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
+
+  // This set of rotating messages shows in the progress animation
+  const loadingMessages = [
+    'Analyzing your startup profile...',
+    'Searching for perfect investor matches...',
+    'Evaluating investment thesis alignment...',
+    'Filtering by check size preferences...',
+    'Assessing regional compatibility...',
+    'Matching investors to your growth stage...',
+    'Finding your ideal funding partners...',
+    'Discovering hidden investment opportunities...',
+    'Analyzing investor track records...',
+  ];
+
+  // -----------------------------
+  // Helper: Start the loading animation for ~30s
+  // -----------------------------
+  const startLoadingAnimation = () => {
+    setLoadingProgress(0);
+    setLoadingMessage(loadingMessages[0]);
+
+    let messageIndex = 0;
+
+    // Animate progress from 0% up to ~92% over ~30s
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        // Switch the message every ~12 steps
+        if (prev % 12 === 0 && prev > 0) {
+          messageIndex = (messageIndex + 1) % loadingMessages.length;
+          setLoadingMessage(loadingMessages[messageIndex]);
+        }
+        const newProgress = prev + 1;
+        if (newProgress >= 92) {
+          clearInterval(progressInterval);
+          setLoadingMessage('Almost there! Finalizing your matches...');
+        }
+        return newProgress >= 92 ? 92 : newProgress;
+      });
+    }, 326); // ~30s to reach 92%
+
+    return () => clearInterval(progressInterval);
+  };
+
+  // -----------------------------
+  // useEffect: must have valid sign-in data => load from API or cache
+  // -----------------------------
+  useEffect(() => {
+    const savedData = localStorage.getItem('startupSignupData');
+    if (!savedData) {
+      // No sign-in data => show error & stop
+      setError('You must sign in before viewing investor data.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Attempt to parse sign-in data
+    const parsedData = JSON.parse(savedData);
+
+    const hasCalledApi = localStorage.getItem('hasCalledVcMatcherApi') === 'true';
+    const cachedResults = localStorage.getItem('vcMatcherResults');
+
+    // If we already have cached results => use them
+    if (hasCalledApi && cachedResults) {
+      try {
+        const parsedResults = JSON.parse(cachedResults);
+        setInvestors(parsedResults);
+        setFilteredInvestors(parsedResults);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error parsing cached results:', err);
+        handleApiFetch(parsedData);
+      }
+    } else {
+      // First time => call API
+      handleApiFetch(parsedData);
+    }
+  }, []);
+
+  // -----------------------------
+  // Function: call the external VC Matching API
+  // -----------------------------
+  const handleApiFetch = (signupData) => {
+    setApiLoading(true);
+    startLoadingAnimation();
+
+    const payload = {
+      industry: signupData.industry || '',
+      stage: signupData.stage || '',
+      business_model: signupData.businessModel || '',
+      location: signupData.location || '',
+      traction: signupData.traction || '',
+      team: signupData.teamExperience || '',
+      pitch: signupData.pitchSummary || '',
+      preferred_check_size: formatCheckSize(signupData.checkSizeMin, signupData.checkSizeMax),
+    };
+
+    fetch('https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setLoadingProgress(100);
+        setLoadingMessage('Done!');
+        localStorage.setItem('vcMatcherResults', JSON.stringify(data));
+        localStorage.setItem('hasCalledVcMatcherApi', 'true');
+        setInvestors(data);
+        setFilteredInvestors(data);
+        setApiLoading(false);
         setIsLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching CSV:', err);
-        setError('Failed to load investor data. Please try again later.');
+        console.error('Error fetching VC matches:', err);
+        setError('Failed to fetch investor matches. Please try again later.');
+        setApiLoading(false);
         setIsLoading(false);
       });
   };
 
-  // Fetch CSV from public/data/investors_cleaned.csv on mount
-  useEffect(() => {
-    fetchInvestorData();
-  }, []);
+  // Helper: format the check size for the payload
+  function formatCheckSize(min, max) {
+    if (min && max) return `$${min} to $${max}`;
+    if (min && !max) return `$${min}+`;
+    return '';
+  }
 
-  // Extract unique values for filters
-  const getInvestorTypes = () => {
-    const types = new Set();
-    investors.forEach((investor) => {
-      const name = investor['Investor Name'];
-      if (name.includes('VC firm')) types.add('VC Firm');
-      else if (name.includes('Angel network')) types.add('Angel Network');
-      else if (name.includes('Family office')) types.add('Family Office');
-      else if (name.includes('Solo angel')) types.add('Solo Angel');
-      else if (name.includes('Startup studio')) types.add('Startup Studio');
-    });
-    return ['All', ...Array.from(types)];
+  // -----------------------------
+  // Reanalyze => clear old results, call API again
+  // -----------------------------
+  const handleRefresh = () => {
+    const savedData = localStorage.getItem('startupSignupData');
+    if (!savedData) {
+      // If no sign in data => can't reanalyze, show error
+      setError('No sign-in data found. Please sign in again to reanalyze.');
+      return;
+    }
+    localStorage.removeItem('vcMatcherResults');
+    localStorage.setItem('hasCalledVcMatcherApi', 'false');
+    setFilteredInvestors([]);
+    setInvestors([]);
+
+    // call the API again
+    handleApiFetch(JSON.parse(savedData));
   };
 
-  const getRegions = () => {
-    const regions = new Set();
-    investors.forEach((investor) => {
-      const geos = investor.Geography.split(' ');
-      geos.forEach((geo) => {
-        if (!geo.includes('+')) regions.add(geo);
-      });
-    });
-    return ['All', ...Array.from(regions).sort()];
-  };
-
-  const getStages = () => {
-    const stageMap = {
-      '1': 'Idea/Patent',
-      '2': 'Prototype',
-      '3': 'Early Revenue',
-      '4': 'Scaling',
-    };
-    const stages = new Set();
-    investors.forEach((investor) => {
-      const stageText = investor.Stages;
-      Object.entries(stageMap).forEach(([key, value]) => {
-        if (stageText.includes(`${key}.`)) stages.add(value);
-      });
-    });
-    return ['All', ...Array.from(stages)];
-  };
-
-  const getCheckSizes = () => {
-    return ['All', 'Under $100k', '$100k-$1M', '$1M-$5M', '$5M+'];
-  };
-
-  // Filtering and sorting investors list
+  // -----------------------------
+  // Filter & sort logic
+  // -----------------------------
   useEffect(() => {
     if (investors.length === 0) return;
+    if (apiLoading) return;
+
     setIsLoading(true);
     const timer = setTimeout(() => {
       let results = [...investors];
 
+      // Search
       if (searchTerm) {
-        results = results.filter((investor) =>
-          Object.values(investor).some((value) =>
-            String(value).toLowerCase().includes(searchTerm.toLowerCase())
-          )
+        const term = searchTerm.toLowerCase();
+        results = results.filter((inv) =>
+          Object.values(inv).some((val) => String(val).toLowerCase().includes(term))
         );
       }
 
+      // Type
       if (typeFilter !== 'All') {
-        results = results.filter((investor) => {
-          const name = investor['Investor Name'];
+        results = results.filter((inv) => {
+          const name = inv['Investor Name'] || '';
           if (typeFilter === 'VC Firm' && name.includes('VC firm')) return true;
           if (typeFilter === 'Angel Network' && name.includes('Angel network')) return true;
           if (typeFilter === 'Family Office' && name.includes('Family office')) return true;
@@ -122,82 +249,74 @@ const InvestorDatabase = () => {
         });
       }
 
+      // Region
       if (regionFilter !== 'All') {
-        results = results.filter((investor) =>
-          investor.Geography.includes(regionFilter)
-        );
+        results = results.filter((inv) => inv.Geography.includes(regionFilter));
       }
 
+      // Stage
       if (stageFilter !== 'All') {
-        results = results.filter((investor) => {
-          const stageMap = {
-            'Idea/Patent': '1.',
-            'Prototype': '2.',
-            'Early Revenue': '3.',
-            'Scaling': '4.',
-          };
-          return investor.Stages.includes(stageMap[stageFilter]);
-        });
-      }
-
-      if (checkSizeFilter !== 'All') {
-        results = results.filter((investor) => {
-          const normalizeCheckSize = (checkSize) =>
-            checkSize.replace(/\s+/g, '').toLowerCase();
-          const checkSizeValue = normalizeCheckSize(investor['Check Size']);
-          if (checkSizeFilter === 'Under $100k') {
-            return (
-              checkSizeValue.includes('$1k') ||
-              checkSizeValue.includes('$5k') ||
-              checkSizeValue.includes('$10k') ||
-              checkSizeValue.includes('$25k') ||
-              checkSizeValue.includes('$50k')
-            );
-          } else if (checkSizeFilter === '$100k-$1M') {
-            return (
-              checkSizeValue.includes('$100k') ||
-              checkSizeValue.includes('$150k') ||
-              checkSizeValue.includes('$200k') ||
-              checkSizeValue.includes('$500k') ||
-              (checkSizeValue.includes('$1m') && !checkSizeValue.includes('$10m'))
-            );
-          } else if (checkSizeFilter === '$1M-$5M') {
-            return (
-              (checkSizeValue.includes('$1m') ||
-                checkSizeValue.includes('$2m') ||
-                checkSizeValue.includes('$3m') ||
-                checkSizeValue.includes('$4m') ||
-                checkSizeValue.includes('$5m')) &&
-              !checkSizeValue.includes('$10m')
-            );
-          } else if (checkSizeFilter === '$5M+') {
-            return (
-              checkSizeValue.includes('$5m') ||
-              checkSizeValue.includes('$10m') ||
-              checkSizeValue.includes('$20m')
-            );
-          }
-          return false;
-        });
-      }
-
-      if (sortAlphabetically) {
-        const sortInvestorsByName = (list) => {
-          return [...list].sort((a, b) => {
-            const nameA = cleanInvestorName(a['Investor Name']).toLowerCase();
-            const nameB = cleanInvestorName(b['Investor Name']).toLowerCase();
-            return nameA.localeCompare(nameB);
-          });
+        const stageMap = {
+          'Idea/Patent': '1.',
+          'Prototype': '2.',
+          'Early Revenue': '3.',
+          'Scaling': '4.',
         };
+        results = results.filter((inv) => inv.Stages.includes(stageMap[stageFilter]));
+      }
 
-        const allInvestorsSorted = sortInvestorsByName([...investors]);
+      // Check size
+      if (checkSizeFilter !== 'All') {
+        results = results.filter((inv) => {
+          const checkVal = (inv['Check Size'] || '').replace(/\s+/g, '').toLowerCase();
+          switch (checkSizeFilter) {
+            case 'Under $100k':
+              return (
+                checkVal.includes('$1k') ||
+                checkVal.includes('$5k') ||
+                checkVal.includes('$10k') ||
+                checkVal.includes('$25k') ||
+                checkVal.includes('$50k')
+              );
+            case '$100k-$1M':
+              return (
+                checkVal.includes('$100k') ||
+                checkVal.includes('$150k') ||
+                checkVal.includes('$200k') ||
+                checkVal.includes('$500k') ||
+                (checkVal.includes('$1m') && !checkVal.includes('$10m'))
+              );
+            case '$1M-$5M':
+              return (
+                (checkVal.includes('$1m') ||
+                  checkVal.includes('$2m') ||
+                  checkVal.includes('$3m') ||
+                  checkVal.includes('$4m') ||
+                  checkVal.includes('$5m')) &&
+                !checkVal.includes('$10m')
+              );
+            case '$5M+':
+              return (
+                checkVal.includes('$5m') ||
+                checkVal.includes('$10m') ||
+                checkVal.includes('$20m')
+              );
+            default:
+              return false;
+          }
+        });
+      }
+
+      // Sort alphabetically?
+      if (sortAlphabetically) {
+        const sortedAll = sortInvestorsByName(investors);
         const rankMap = new Map();
-        allInvestorsSorted.forEach((investor, index) => {
-          const cName = cleanInvestorName(investor['Investor Name']);
-          rankMap.set(cName, index + 1);
+        sortedAll.forEach((inv, idx) => {
+          const cName = cleanInvestorName(inv['Investor Name'] || '');
+          rankMap.set(cName, idx + 1);
         });
         results = sortInvestorsByName(results).map((inv) => {
-          const cName = cleanInvestorName(inv['Investor Name']);
+          const cName = cleanInvestorName(inv['Investor Name'] || '');
           return {
             ...inv,
             rank: rankMap.get(cName),
@@ -219,9 +338,19 @@ const InvestorDatabase = () => {
     checkSizeFilter,
     investors,
     sortAlphabetically,
+    apiLoading,
   ]);
 
-  // Clean up investor name for display
+  // Sort by name
+  const sortInvestorsByName = (list) => {
+    return [...list].sort((a, b) => {
+      const nameA = cleanInvestorName(a['Investor Name'] || '').toLowerCase();
+      const nameB = cleanInvestorName(b['Investor Name'] || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  // Clean up name
   const cleanInvestorName = (name) => {
     return name
       .replace(' VC firm', '')
@@ -232,9 +361,25 @@ const InvestorDatabase = () => {
       .replace('...', '');
   };
 
-  const toggleSortOrder = () => {
-    setSortAlphabetically(!sortAlphabetically);
+  // Basic investor type
+  const getInvestorType = (name) => {
+    if (name.includes('VC firm')) return 'VC Firm';
+    if (name.includes('Angel network')) return 'Angel Network';
+    if (name.includes('Family office')) return 'Family Office';
+    if (name.includes('Solo angel')) return 'Solo Angel';
+    if (name.includes('Startup studio')) return 'Startup Studio';
+    return 'Investor';
   };
+
+  // Format comp score as a percentage
+  const formatCompatibilityScore = (score) => {
+    if (typeof score !== 'number' || isNaN(score)) {
+      return '0% Compatibility';
+    }
+    return `${Math.round(score * 100)}% Compatibility`;
+  };
+
+  const toggleSortOrder = () => setSortAlphabetically(!sortAlphabetically);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -245,28 +390,11 @@ const InvestorDatabase = () => {
     setSortAlphabetically(false);
   };
 
-  const getInvestorType = (name) => {
-    if (name.includes('VC firm')) return 'VC Firm';
-    if (name.includes('Angel network')) return 'Angel Network';
-    if (name.includes('Family office')) return 'Family Office';
-    if (name.includes('Solo angel')) return 'Solo Angel';
-    if (name.includes('Startup studio')) return 'Startup Studio';
-    return 'Investor';
-  };
+  // -----------------------------
+  // Render
+  // -----------------------------
 
-  // Format compatibility score as a percentage
-  const formatCompatibilityScore = (score) => {
-    if (score === undefined || score === null || isNaN(score)) {
-      return '0% Compatibility';
-    }
-    return `${Math.round(score * 100)}% Compatibility`;
-  };
-
-  // Handle API refresh
-  const handleRefresh = () => {
-    fetchInvestorData();
-  };
-
+  // 1) If there's an error
   if (error) {
     return (
       <div className="error-container">
@@ -277,6 +405,31 @@ const InvestorDatabase = () => {
     );
   }
 
+  // 2) If we are calling the external API => show loading animation
+  if (apiLoading) {
+    return (
+      <div className="loading-container">
+        <h2>Finding Your Perfect Investors</h2>
+        <div className="loading-message">{loadingMessage}</div>
+        <div className="progress-container">
+          <div className="progress-bar" style={{ width: `${loadingProgress}%` }}>
+            <div className="progress-glow"></div>
+          </div>
+        </div>
+        <div className="loading-details">
+          <span>Analyzing startup profile</span>
+          <span>{loadingProgress}%</span>
+        </div>
+        <div className="loading-animation">
+          {[1, 2, 3, 4, 5].map((dot) => (
+            <div key={dot} className={`loading-dot dot-${dot}`}></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 3) Normal UI (filters + row-based results)
   return (
     <div className="app-container">
       {/* Header */}
@@ -287,7 +440,7 @@ const InvestorDatabase = () => {
         </div>
       </header>
 
-      {/* Search and Filters */}
+      {/* Filters */}
       <div className="filter-container">
         <div className="filter-row">
           <div className="search-box">
@@ -313,14 +466,11 @@ const InvestorDatabase = () => {
           </div>
 
           <div className="filter-select">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="" disabled>
                 Investor Type
               </option>
-              {getInvestorTypes().map((type) => (
+              {getInvestorTypes(investors).map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
@@ -329,14 +479,11 @@ const InvestorDatabase = () => {
           </div>
 
           <div className="filter-select">
-            <select
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
-            >
+            <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
               <option value="" disabled>
                 Region
               </option>
-              {getRegions().map((region) => (
+              {getRegions(investors).map((region) => (
                 <option key={region} value={region}>
                   {region}
                 </option>
@@ -345,14 +492,11 @@ const InvestorDatabase = () => {
           </div>
 
           <div className="filter-select">
-            <select
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-            >
+            <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>
               <option value="" disabled>
                 Stage
               </option>
-              {getStages().map((stage) => (
+              {getStages(investors).map((stage) => (
                 <option key={stage} value={stage}>
                   {stage}
                 </option>
@@ -361,10 +505,7 @@ const InvestorDatabase = () => {
           </div>
 
           <div className="filter-select">
-            <select
-              value={checkSizeFilter}
-              onChange={(e) => setCheckSizeFilter(e.target.value)}
-            >
+            <select value={checkSizeFilter} onChange={(e) => setCheckSizeFilter(e.target.value)}>
               <option value="" disabled>
                 Check Size
               </option>
@@ -377,14 +518,14 @@ const InvestorDatabase = () => {
           </div>
 
           <button onClick={handleRefresh} className="reanalyze-button">
-            <svg 
-              className="refresh-icon" 
-              xmlns="http://www.w3.org/2000/svg" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
+            <svg
+              className="refresh-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeLinejoin="round"
             >
               <path d="M23 4v6h-6"></path>
@@ -398,11 +539,7 @@ const InvestorDatabase = () => {
 
         <div className="sort-toggle">
           <label className="toggle-switch">
-            <input
-              type="checkbox"
-              checked={sortAlphabetically}
-              onChange={toggleSortOrder}
-            />
+            <input type="checkbox" checked={sortAlphabetically} onChange={toggleSortOrder} />
             <span className="toggle-slider"></span>
           </label>
           <span className="toggle-label">Sort alphabetically</span>
@@ -418,11 +555,10 @@ const InvestorDatabase = () => {
         </div>
       </div>
 
-      {/* Results - ONE PER ROW */}
-      <div className="investor-list">
-        {isLoading ? (
-          // Loading skeleton
-          [...Array(6)].map((_, i) => (
+      {/* If still isLoading => skeleton */}
+      {isLoading ? (
+        <div className="investor-list">
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="skeleton-card skeleton-row">
               <div className="skeleton-title"></div>
               <div className="skeleton-subtitle"></div>
@@ -433,14 +569,16 @@ const InvestorDatabase = () => {
                 <div className="skeleton-tag"></div>
               </div>
             </div>
-          ))
-        ) : filteredInvestors.length > 0 ? (
-          filteredInvestors.map((investor, index) => {
-            const investorType = getInvestorType(investor['Investor Name']);
-            const cleanName = cleanInvestorName(investor['Investor Name']);
-            const totalCount = 250; // Fixed total count as requested
+          ))}
+        </div>
+      ) : filteredInvestors.length > 0 ? (
+        <div className="investor-list">
+          {filteredInvestors.map((investor, index) => {
+            const investorType = getInvestorType(investor['Investor Name'] || '');
+            const cleanName = cleanInvestorName(investor['Investor Name'] || '');
+            const totalCount = investor.totalCount || investors.length;
 
-            // Prepare data for the query params
+            // Prepare data for “Summarize with Gemini”
             const encodedName = encodeURIComponent(cleanName);
             const encodedType = encodeURIComponent(investorType);
             const encodedThesis = encodeURIComponent(investor['Investment Thesis'] || '');
@@ -452,41 +590,39 @@ const InvestorDatabase = () => {
               <div key={index} className="investor-row">
                 <div className="row-content">
                   <div className="row-left">
-                    {/* Ranking display with numerator bigger than denominator */}
                     <div className="rank-display">
-                      <span className="rank-numerator">{investor.rank || index + 1}</span>
+                      <span className="rank-numerator">
+                        {investor.rank ? investor.rank : index + 1}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="row-main">
                     <div className="row-header">
                       <h2>{cleanName}</h2>
                       <span className="investor-type">{investorType}</span>
-                      
-                      {/* Compatibility score as a green tag */}
                       <span className="compatibility-tag">
                         {formatCompatibilityScore(investor.compatibility_score)}
                       </span>
                     </div>
 
                     <div className="region-tags">
-                      {investor.Geography.split(' ')
+                      {(investor.Geography || '')
+                        .split(' ')
                         .filter((g) => !g.includes('+'))
                         .map((regionItem, i2) => (
                           <span key={i2} className="region-tag">
                             {regionItem}
                           </span>
                         ))}
-                      {investor.Geography.split(' ').find((g) => g.includes('+')) && (
+                      {(investor.Geography || '').split(' ').find((g) => g.includes('+')) && (
                         <span className="region-tag">+more</span>
                       )}
                     </div>
 
                     <div className="thesis">
                       <p className="field-label">Investment Thesis</p>
-                      <p className="thesis-text">
-                        {investor['Investment Thesis']}
-                      </p>
+                      <p className="thesis-text">{investor['Investment Thesis']}</p>
                     </div>
 
                     <div className="row-details">
@@ -495,10 +631,11 @@ const InvestorDatabase = () => {
                         <p className="field-value">{investor['Check Size']}</p>
                       </div>
                     </div>
-                    
+
                     <div className="stage-container">
                       <div className="stage-tags-wrapper">
-                        {investor.Stages.split(' ')
+                        {(investor.Stages || '')
+                          .split(' ')
                           .filter((s) => s.match(/\d\./))
                           .map((stage, i3) => {
                             const stageMap = {
@@ -519,20 +656,14 @@ const InvestorDatabase = () => {
                   </div>
 
                   <div className="row-actions">
-                    <a
-                      href={`mailto:${investor['Fake Email']}`}
-                      className="contact-button"
-                    >
-                      Contact
-                    </a>
-
+                    {/* Contact button if we have an email */}
+                    {investor['Fake Email'] && (
+                      <a href={`mailto:${investor['Fake Email']}`} className="contact-button">
+                        Contact
+                      </a>
+                    )}
                     <Link
-                      to={`/chat?name=${encodedName}
-                            &type=${encodedType}
-                            &thesis=${encodedThesis}
-                            &checkSize=${encodedCheckSize}
-                            &geography=${encodedGeography}
-                            &stages=${encodedStages}`}
+                      to={`/chat?name=${encodedName}&type=${encodedType}&thesis=${encodedThesis}&checkSize=${encodedCheckSize}&geography=${encodedGeography}&stages=${encodedStages}`}
                       className="gemini-summarize-button"
                     >
                       Summarize with Gemini
@@ -541,238 +672,25 @@ const InvestorDatabase = () => {
                 </div>
               </div>
             );
-          })
-        ) : (
-          <div className="no-results">
-            <svg
-              className="no-results-icon"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3>No investors found</h3>
-            <p>Try adjusting your search or filter criteria.</p>
-            <button onClick={resetFilters} className="reset-button large">
-              Reset Filters
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Add this CSS to your InvestorDatabase.css file */}
-      <style jsx>{`
-        .header-content.centered {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          gap: 6px;
-        }
-
-        /* New row-based layout */
-        .investor-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          width: 100%;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .investor-row {
-          display: flex;
-          width: 100%;
-          background-color: #fff;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .investor-row:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .row-content {
-          display: flex;
-          width: 100%;
-          padding: 20px;
-        }
-
-        .row-left {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: flex-start;
-          min-width: 80px;
-          margin-right: 20px;
-        }
-
-        .row-main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .row-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          justify-content: center;
-          min-width: 160px;
-          margin-left: 20px;
-        }
-
-        /* Ranking display with offsets */
-        .rank-display {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          position: relative;
-          padding-top: 10px;
-        }
-
-        .rank-numerator {
-          font-size: 32px;
-          color: #2563eb;
-          font-weight: 700;
-          position: relative;
-          left: -6px; /* Offset to the left */
-        }
-
-        /* Compatibility tag */
-        .compatibility-tag {
-          display: inline-block;
-          background-color: #10b981;
-          color: white;
-          padding: 4px 10px;
-          border-radius: 16px;
-          font-size: 14px;
-          font-weight: 600;
-          margin-left: 10px;
-        }
-
-        /* Row header */
-        .row-header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 10px;
-        }
-
-        .row-header h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-          margin-right: 10px; /* added margin between name and investor type */
-        }
-
-        .row-details {
-          display: flex;
-          gap: 20px;
-          margin-top: 10px;
-        }
-
-        /* Stage tags improvements */
-        .stage-container {
-          margin-top: 12px;
-        }
-
-        .stage-tags-wrapper {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 4px;
-        }
-
-        .stage-tag {
-          display: inline-block;
-          background-color: #dbeafe;
-          color: #1e40af;
-          font-size: 13px;
-          padding: 4px 12px;
-          border-radius: 4px;
-          font-weight: 500;
-          height: auto;
-        }
-
-        /* Field labels */
-        .field-label {
-          font-size: 14px;
-          font-weight: 600;
-          color: #4b5563;
-          margin: 0 0 4px 0;
-        }
-
-        /* Modify skeleton for row layout */
-        .skeleton-row {
-          width: 100%;
-          height: 180px;
-          padding: 20px;
-        }
-
-        /* Reanalyze button styling */
-        .reanalyze-button {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          background-color: #2563eb;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          padding: 6px 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          margin-left: auto;
-        }
-
-        .reanalyze-button:hover {
-          background-color: #1d4ed8;
-        }
-
-        .refresh-icon {
-          width: 14px;
-          height: 14px;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-          .row-content {
-            flex-direction: column;
-          }
-
-          .row-left {
-            flex-direction: row;
-            justify-content: flex-start;
-            margin-right: 0;
-            margin-bottom: 15px;
-          }
-
-          .rank-display {
-            flex-direction: row;
-            align-items: baseline;
-            padding-top: 0;
-          }
-
-          .rank-numerator {
-            margin-right: 5px;
-            left: 0;
-          }
-
-          .row-actions {
-            flex-direction: row;
-            margin-left: 0;
-            margin-top: 15px;
-          }
-        }
-      `}</style>
+          })}
+        </div>
+      ) : (
+        <div className="no-results">
+          <svg className="no-results-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h3>No investors found</h3>
+          <p>Try adjusting your search or filter criteria.</p>
+          <button onClick={resetFilters} className="reset-button large">
+            Reset Filters
+          </button>
+        </div>
+      )}
     </div>
   );
 };
