@@ -150,7 +150,6 @@ const NavbarPage = () => {
                                         onMouseEnter={() => setHoveredLink('chat')}
                                         onMouseLeave={() => setHoveredLink(null)}
                                     >
-                                        Onboard
                                         Chat
                                     </a>
 

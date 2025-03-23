@@ -73,8 +73,14 @@ const StartupMatchingPlatform = () => {
                             expertise — so you can focus on building your vision.
                         </p>
                         <div style={styles.buttonGroup}>
-                            <button style={styles.primaryButton}>Get Matched Today</button>
-                            <button style={styles.secondaryButton}>How It Works</button>
+                            <a href='/signup'>
+                                <button style={styles.primaryButton}>
+                                    Get Matched Today
+                                </button>
+                            </a>
+                            <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran" target="_blank" rel="noopener noreferrer">
+                                <button style={styles.secondaryButton}>How It Works</button>
+                            </a>
                         </div>
                     </div>
 
@@ -118,15 +124,6 @@ const StartupMatchingPlatform = () => {
                             >
                                 Advise
                             </div>
-                            <div
-                                style={{
-                                    ...styles.tab,
-                                    ...(activeTab === 'mentor' ? styles.activeTab : {})
-                                }}
-                                onClick={() => setActiveTab('mentor')}
-                            >
-                                Mentor
-                            </div>
                         </div>
 
                         <div style={styles.tabContent}>
@@ -155,20 +152,6 @@ const StartupMatchingPlatform = () => {
                                     </p>
                                     <button style={{ ...styles.secondaryButton }}>
                                         Learn about virtual CFO
-                                    </button>
-                                </>
-                            )}
-
-                            {activeTab === 'mentor' && (
-                                <>
-                                    <h3 style={styles.tabTitle}>Connect with experienced startup mentors</h3>
-                                    <p style={styles.tabDescription}>
-                                        Access a network of experienced entrepreneurs and industry veterans
-                                        who've been where you are. Our mentor matching helps you find advisors
-                                        who can provide guidance specific to your challenges and goals.
-                                    </p>
-                                    <button style={{ ...styles.secondaryButton }}>
-                                        Browse our mentor network
                                     </button>
                                 </>
                             )}
@@ -206,15 +189,6 @@ const StartupMatchingPlatform = () => {
                                     </svg>
                                 )
                             },
-                            {
-                                title: "Mentor Network",
-                                description: "Connect with seasoned entrepreneurs and industry experts who provide strategic guidance, help you avoid common pitfalls, and open doors to opportunities.",
-                                icon: (
-                                    <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                )
-                            }
                         ].map((feature, index) => (
                             <div
                                 key={index}
@@ -237,9 +211,7 @@ const StartupMatchingPlatform = () => {
                         ))}
                     </div>
                 </section>
-            </div>
 
-            <div style={styles.pageWrapper}>
                 {/* Footer with LED accents */}
                 <footer style={styles.footer}>
                     <div style={styles.footerLedAccent}></div>
