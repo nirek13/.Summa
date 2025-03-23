@@ -29,7 +29,7 @@ const StartupMatchingPlatform = () => {
     return (
         <div style={styles.pageWrapper}>
             <div style={styles.container}>
-                {/* Enhanced Hero section with LED effects and additional graphic elements */}
+                {/* Enhanced Hero section with LED effects and additional graphic elements  CHEEEEESEEEE*/}
                 <section style={styles.heroSection}>
                     {/* Enhanced LED effects and background elements */}
                     <div style={heroLedStyle}></div>
