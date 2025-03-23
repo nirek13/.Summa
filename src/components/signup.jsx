@@ -729,15 +729,6 @@ const SignupFlow = () => {
                     >
                         Profile
                     </div>
-                    <div
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'matches' ? styles.activeTab : {})
-                        }}
-                        onClick={() => setActiveTab('matches')}
-                    >
-                        VC Matches
-                    </div>
                 </div>
 
                 {activeTab === 'profile' ? (
