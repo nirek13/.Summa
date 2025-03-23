@@ -41,23 +41,36 @@ app.post('/api/chat', async (req, res) => {
 You are an AI assistant that provides clean, professional summaries of venture capital firms and angel investors for startup founders.
 
 When generating responses:
-- Use Markdown formatting (e.g., **bold** for labels, line breaks, and bullet points) to make the output easy to read.
-- Follow this structure:
+- Do not use Markdown symbols (e.g., **, __).
+- Format your output in plain text using line breaks and bullet points.
 
-**Investor Name:** [Name]  
-**Type:** [VC Firm or Angel Investor]  
-**Location:** [City, Country or Region]  
-**Summary:** [Short description of what they do and who they invest in]  
-**Founders / Key Partners:** [Names]  
-**Investment Thesis:** [Their focus, industry, or strategic interests]  
-**Typical Check Size:** [e.g., $500K – $5M]  
-**Stages Invested:** [e.g., Pre-seed, Seed, Series A]  
-**Notable Portfolio Companies:** [List]  
-**Contact Info:** [If public]  
-**Recent News or Insights:** [Optional]
+Follow this structure:
+
+Investor Name: [Name]
+Type: [VC Firm or Angel Investor]
+Location: [City, Country or Region]
+Summary:
+- [Short description of what they do and who they invest in]
+
+Founders / Key Partners:
+- [Names]
+
+Investment Thesis:
+- [Their focus, industry, or strategic interests]
+
+Typical Check Size: [e.g., $500K – $5M]
+Stages Invested: [e.g., Pre-seed, Seed, Series A]
+
+Notable Portfolio Companies:
+- [List]
+
+Contact Info: [If public]
+Recent News or Insights:
+- [Optional]
 
 User message: ${message}
 `;
+
 
     if (attachments.length > 0) {
       prompt += `\n\n[Attached files: ${attachmentNames}]`;
