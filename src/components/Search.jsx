@@ -688,7 +688,7 @@ const InvestorDatabase = () => {
                       rel="noopener noreferrer"
                       className="gemini-summarize-button"
                     >
-                      Summarize with Gemini
+                      Advanced Insights
                     </a>
                   </div>
                 </div>
