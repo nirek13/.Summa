@@ -1,6 +1,6 @@
 import { Image, Maximize2, Minimize2, Paperclip, Send, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom'; // <-- Import for reading URL query params
+import { useLocation } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -13,22 +13,32 @@ import {
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis, YAxis
+  XAxis,
+  YAxis,
 } from 'recharts';
-import './MinimalistChatbot.css'; // Import the CSS file
+import './MinimalistChatbot.css';
+
+// Helper: Generate a UUID (v4) for session identification
+const generateUUID = () => {
+  // simplified UUID generator for demo purposes
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 // -------------------------------------------------------
-// 1) HELPER: parseResponse for special blocks like %Graphs%
+// 1) Helper: parseResponse for special blocks like %Graphs% and %Table%
 // -------------------------------------------------------
 const parseResponse = (text) => {
   const parts = [];
   let lastIndex = 0;
-
   const graphRegex = /%Graphs%\s*{([^}]*)}/g;
   const tableRegex = /%Table%\s*{([^}]*)}/g;
   let match;
 
-  // Parse any %Graphs% blocks
+  // Parse %Graphs% blocks
   while ((match = graphRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push({
@@ -42,7 +52,6 @@ const parseResponse = (text) => {
       const titleMatch = graphText.match(/title:\s*'([^']*)'/);
       const labelsMatch = graphText.match(/labels:\s*\[(.*?)\]/);
       const valuesMatch = graphText.match(/values:\s*\[(.*?)\]/);
-
       if (typeMatch && labelsMatch && valuesMatch) {
         const labels = labelsMatch[1]
           .split(',')
@@ -50,7 +59,6 @@ const parseResponse = (text) => {
         const values = valuesMatch[1]
           .split(',')
           .map((s) => parseFloat(s.trim()));
-
         parts.push({
           type: 'graph',
           content: {
@@ -67,7 +75,7 @@ const parseResponse = (text) => {
     lastIndex = match.index + match[0].length;
   }
 
-  // Parse any %Table% blocks
+  // Parse %Table% blocks
   while ((match = tableRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push({
@@ -79,12 +87,10 @@ const parseResponse = (text) => {
       const tableText = match[1];
       const headersMatch = tableText.match(/headers:\s*\[(.*?)\]/);
       const rowsMatch = tableText.match(/rows:\s*\[(.*?)\](?=\s*}\s*$|,)/);
-
       if (headersMatch && rowsMatch) {
         const headers = headersMatch[1]
           .split(',')
           .map((item) => item.trim().replace(/['"]/g, ''));
-
         const rowsStr = rowsMatch[1];
         const rowMatches = rowsStr.match(/\[(.*?)\]/g) || [];
         const rows = rowMatches.map((rowText) => {
@@ -93,7 +99,6 @@ const parseResponse = (text) => {
             .split(',')
             .map((cell) => cell.trim().replace(/['"]/g, ''));
         });
-
         parts.push({
           type: 'table',
           content: { headers, rows },
@@ -114,19 +119,15 @@ const parseResponse = (text) => {
 };
 
 // -------------------------------------------------------
-// 2) GraphRenderer
+// 2) GraphRenderer Component
 // -------------------------------------------------------
 const GraphRenderer = ({ data }) => {
   if (!data || !data.type) return null;
-
   const chartData = data.labels.map((label, i) => ({
     name: label,
     value: data.values[i],
   }));
-
-  // Some color palette
   const COLORS = ['#E6F2FF', '#F0F7FF', '#D9E8FF', '#C2DBFF', '#AAD1FF', '#94C5FF'];
-
   switch (data.type) {
     case 'line':
       return (
@@ -151,7 +152,6 @@ const GraphRenderer = ({ data }) => {
           </ResponsiveContainer>
         </div>
       );
-
     case 'bar':
       return (
         <div className="graph-container">
@@ -168,7 +168,6 @@ const GraphRenderer = ({ data }) => {
           </ResponsiveContainer>
         </div>
       );
-
     case 'pie':
       return (
         <div className="graph-container">
@@ -196,18 +195,16 @@ const GraphRenderer = ({ data }) => {
           </ResponsiveContainer>
         </div>
       );
-
     default:
       return <div className="text-gray-500">Unsupported graph type: {data.type}</div>;
   }
 };
 
 // -------------------------------------------------------
-// 3) TableRenderer
+// 3) TableRenderer Component
 // -------------------------------------------------------
 const TableRenderer = ({ data }) => {
   if (!data || !data.headers || !data.rows) return null;
-
   return (
     <div className="table-container">
       <table className="data-table">
@@ -237,15 +234,13 @@ const TableRenderer = ({ data }) => {
 };
 
 // -------------------------------------------------------
-// 4) Individual Message component
+// 4) Message Component
 // -------------------------------------------------------
 const Message = ({ message, isUser }) => {
   const parts = isUser ? [{ type: 'text', content: message.text }] : parseResponse(message.text);
-
   return (
     <div className={`message ${isUser ? 'user' : 'assistant'}`}>
       {!isUser && <div className="avatar assistant-avatar">A</div>}
-
       <div className={`message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`}>
         {parts.map((part, idx) => {
           switch (part.type) {
@@ -264,14 +259,13 @@ const Message = ({ message, isUser }) => {
           }
         })}
       </div>
-
       {isUser && <div className="avatar user-avatar">U</div>}
     </div>
   );
 };
 
 // -------------------------------------------------------
-// 5) Main Chat Component
+// 5) Main Chat Component with Conversation Memory
 // -------------------------------------------------------
 const MinimalistChatbot = () => {
   const [messages, setMessages] = useState([]);
@@ -281,32 +275,36 @@ const MinimalistChatbot = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  // -------------- NEW: read query params for auto-summarize --------------
   const location = useLocation();
 
+  // Generate or retrieve a session ID for memory
   useEffect(() => {
-    // parse ?name=..., etc
-    const query = new URLSearchParams(location.search);
-    const name = query.get('name') || '';
+    let sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) {
+      sessionId = generateUUID();
+      localStorage.setItem('sessionId', sessionId);
+    }
+  }, []);
+
+  // Read query params for auto-summarize on first load and update the chat title
+  const query = new URLSearchParams(location.search);
+  const investorName = query.get('name') || 'Chatbot';
+
+  useEffect(() => {
+    const name = investorName;
     const investorType = query.get('type') || '';
     const thesis = query.get('thesis') || '';
     const checkSize = query.get('checkSize') || '';
     const geography = query.get('geography') || '';
     const stages = query.get('stages') || '';
-
-    // If we have at least one parameter => do auto-summarize
     if (name || investorType || thesis || checkSize || geography || stages) {
       autoSummarize(name, investorType, thesis, checkSize, geography, stages);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
-  // -------------------------------------------------------
-  // AUTO-SUMMARIZE: we do NOT add the prompt to the UI
-  // -------------------------------------------------------
+  // Function for auto-summarize via /api/chat (without conversation history)
   const autoSummarize = async (name, type, thesis, checkSize, geography, stages) => {
-    // Build the summary prompt
     const summaryPrompt = `
 Please provide a concise summary of this investor. Include notable portfolio companies, typical founder profiles, average check sizes,
 and any unique aspects a startup founder should know.
@@ -317,31 +315,24 @@ Investment Thesis: ${decodeURIComponent(thesis)}
 Check Size: ${decodeURIComponent(checkSize)}
 Region(s): ${decodeURIComponent(geography)}
 Stages: ${decodeURIComponent(stages)}
-`.trim();
-
+    `.trim();
     setIsTyping(true);
     try {
-      // Call your server with the summary prompt
+      const sessionId = localStorage.getItem('sessionId');
       const response = await fetch('https://genaigenissis.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: summaryPrompt }),
+        body: JSON.stringify({ sessionId, message: summaryPrompt }),
       });
       const data = await response.json();
-
       setIsTyping(false);
-      // Add ONLY the response to the UI
       setMessages((prev) => [...prev, { text: data.text, isUser: false }]);
     } catch (error) {
       console.error('Error calling server:', error);
       setIsTyping(false);
-      // fallback
       setMessages((prev) => [
         ...prev,
-        {
-          text: "I'm sorry, I encountered a server error. Please try again.",
-          isUser: false,
-        },
+        { text: "I'm sorry, I encountered a server error. Please try again.", isUser: false },
       ]);
     }
   };
@@ -351,55 +342,45 @@ Stages: ${decodeURIComponent(stages)}
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // -------------------------------------------------------
-  // Handle user text input + send
-  // -------------------------------------------------------
+  // Handle sending a message (with session memory)
   const handleSend = async () => {
     if (!inputMessage.trim() && attachments.length === 0) return;
-
-    // 1) Add the user’s message
     const newUserMessage = {
       text: inputMessage,
       attachments: [...attachments],
       isUser: true,
     };
     setMessages((prev) => [...prev, newUserMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setAttachments([]);
     setIsTyping(true);
-
     try {
-      // 2) Send to your server
+      const sessionId = localStorage.getItem('sessionId');
       const response = await fetch('https://genaigenissis.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputMessage, attachments }),
+        body: JSON.stringify({
+          sessionId,
+          message: currentMessage,
+          attachments,
+        }),
       });
       const data = await response.json();
       setIsTyping(false);
-
-      // 3) Add the AI response
       setMessages((prev) => [...prev, { text: data.text, isUser: false }]);
     } catch (error) {
       console.error('Error calling server:', error);
       setIsTyping(false);
-      // fallback
       setMessages((prev) => [
         ...prev,
-        {
-          text: "I'm sorry, I encountered a server error. Please try again.",
-          isUser: false,
-        },
+        { text: "I'm sorry, I encountered a server error. Please try again.", isUser: false },
       ]);
     }
   };
 
-  // Toggle expanded/collapsed
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const toggleExpand = () => setIsExpanded(!isExpanded);
 
-  // Handle enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -407,13 +388,10 @@ Stages: ${decodeURIComponent(stages)}
     }
   };
 
-  // Handle file uploads
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-
     files.forEach((file) => {
       if (file.type.startsWith('image/')) {
-        // Show a preview if it's an image
         const reader = new FileReader();
         reader.onload = (evt) => {
           setAttachments((prev) => [
@@ -429,69 +407,48 @@ Stages: ${decodeURIComponent(stages)}
         };
         reader.readAsDataURL(file);
       } else {
-        // Otherwise treat as a generic file
         setAttachments((prev) => [
           ...prev,
-          {
-            type: 'file',
-            name: file.name,
-            size: file.size,
-            file,
-          },
+          { type: 'file', name: file.name, size: file.size, file },
         ]);
       }
     });
-
-    // Clear file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  // Remove attachment
   const removeAttachment = (index) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // -------------------------------------------------------
-  // Render
-  // -------------------------------------------------------
   return (
     <div className="chat-container">
       <div className={`chat-window ${isExpanded ? 'expanded' : 'collapsed'}`}>
-        {/* Header */}
+        {/* Chat Header */}
         <div className="chat-header">
           <div>
-            <h2 className="chat-title">Virtual Assistant</h2>
-            {isExpanded && <p className="chat-subtitle">How can I help you today?</p>}
+            <h2 className="chat-title">{investorName}</h2>
+            {isExpanded && <p className="chat-subtitle">How can we help you today?</p>}
           </div>
-
           {messages.length > 0 && (
             <button onClick={toggleExpand} className="toggle-button">
-              {isExpanded ? (
-                <Minimize2 size={18} className="toggle-icon" />
-              ) : (
-                <Maximize2 size={18} className="toggle-icon" />
-              )}
+              {isExpanded ? <Minimize2 size={18} className="toggle-icon" /> : <Maximize2 size={18} className="toggle-icon" />}
             </button>
           )}
         </div>
 
-        {/* Messages area - only shown when expanded */}
+        {/* Messages Area */}
         {isExpanded && (
           <div className="messages-container">
             {messages.length === 0 ? (
               <div className="empty-state">
                 <p className="empty-state-text">No messages yet</p>
-                <p className="empty-state-subtext">
-                  Start a conversation by typing a message below
-                </p>
+                <p className="empty-state-subtext">Start a conversation by typing a message below</p>
               </div>
             ) : (
               messages.map((msg, i) => <Message key={i} message={msg} isUser={msg.isUser} />)
             )}
-
-            {/* Typing indicator */}
             {isTyping && (
               <div className="typing-indicator">
                 <div className="avatar assistant-avatar">A</div>
@@ -508,22 +465,15 @@ Stages: ${decodeURIComponent(stages)}
           </div>
         )}
 
-        {/* Attachments preview */}
+        {/* Attachments Preview */}
         {isExpanded && attachments.length > 0 && (
           <div className="attachments-container">
             {attachments.map((attachment, idx) => (
               <div key={idx} className="attachment">
                 {attachment.type === 'image' ? (
                   <div className="image-attachment">
-                    <img
-                      src={attachment.preview}
-                      alt={attachment.name}
-                      className="image-preview"
-                    />
-                    <button
-                      className="remove-attachment"
-                      onClick={() => removeAttachment(idx)}
-                    >
+                    <img src={attachment.preview} alt={attachment.name} className="image-preview" />
+                    <button className="remove-attachment" onClick={() => removeAttachment(idx)}>
                       <X size={12} className="remove-icon" />
                     </button>
                   </div>
@@ -541,7 +491,7 @@ Stages: ${decodeURIComponent(stages)}
           </div>
         )}
 
-        {/* Input area */}
+        {/* Input Area */}
         <div className="input-container">
           <div className="input-wrapper">
             <textarea
@@ -552,30 +502,13 @@ Stages: ${decodeURIComponent(stages)}
               rows={isExpanded ? 2 : 1}
               className="message-textarea"
             />
-
             <div className="actions-container">
-              {/* Hidden file input */}
-              <input
-                type="file"
-                id="file-upload"
-                multiple
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                className="hidden"
-                style={{ display: 'none' }}
-              />
-
-              {/* Attachment button */}
+              <input type="file" id="file-upload" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" style={{ display: 'none' }} />
               {isExpanded && (
-                <button
-                  onClick={() => fileInputRef.current.click()}
-                  className="attachment-button"
-                >
+                <button onClick={() => fileInputRef.current.click()} className="attachment-button">
                   <Image size={18} className="attachment-icon" />
                 </button>
               )}
-
-              {/* Send button */}
               <button onClick={handleSend} className="send-button">
                 <Send size={18} className="send-icon" />
               </button>
