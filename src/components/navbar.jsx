@@ -185,7 +185,7 @@ const NavbarPage = () => {
                                         onMouseEnter={() => setHoveredLink('signup')}
                                         onMouseLeave={() => setHoveredLink(null)}
                                     >
-                                        Sign up
+                                        Onboard
                                     </a>
                                     <a href="#demo">
                                         <button style={styles.primaryButton}>
