@@ -52,6 +52,9 @@ function getCheckSizes() {
   return ['All', 'Under $100k', '$100k-$1M', '$1M-$5M', '$5M+'];
 }
 
+// Sleep utility
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const InvestorDatabase = () => {
   // -----------------------------
   // States
@@ -152,7 +155,7 @@ const InvestorDatabase = () => {
   // -----------------------------
   // Function: call the external VC Matching API
   // -----------------------------
-  const handleApiFetch = (signupData) => {
+  const handleApiFetch = async (signupData) => {
     setApiLoading(true);
     startLoadingAnimation();
 
@@ -167,28 +170,34 @@ const InvestorDatabase = () => {
       preferred_check_size: formatCheckSize(signupData.checkSizeMin, signupData.checkSizeMax),
     };
 
-    fetch('https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setLoadingProgress(100);
-        setLoadingMessage('Done!');
-        localStorage.setItem('vcMatcherResults', JSON.stringify(data));
-        localStorage.setItem('hasCalledVcMatcherApi', 'true');
-        setInvestors(data);
-        setFilteredInvestors(data);
-        setApiLoading(false);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching VC matches:', err);
-        setError('Failed to fetch investor matches. Please try again later.');
-        setApiLoading(false);
-        setIsLoading(false);
-      });
+    try {
+      const res = await fetch(
+        'https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await res.json();
+
+      // Sleep for 15s to let the animation play out
+      await sleep(15000);
+
+      setLoadingProgress(100);
+      setLoadingMessage('Done!');
+      localStorage.setItem('vcMatcherResults', JSON.stringify(data));
+      localStorage.setItem('hasCalledVcMatcherApi', 'true');
+      setInvestors(data);
+      setFilteredInvestors(data);
+      setApiLoading(false);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching VC matches:', error);
+      setError('Failed to fetch investor matches. Please try again later.');
+      setApiLoading(false);
+      setIsLoading(false);
+    }
   };
 
   // Helper: format the check size for the payload
@@ -371,12 +380,13 @@ const InvestorDatabase = () => {
     return 'Investor';
   };
 
-  // Format comp score as a percentage
+  // Format compatibility score as a percentage
   const formatCompatibilityScore = (score) => {
     if (typeof score !== 'number' || isNaN(score)) {
       return '0% Compatibility';
     }
-    return `${Math.round(score * 100 - .7, 2) }% Compatibility`;
+    // Example adjustment: subtract 0.7 from the raw number, then multiply by 100
+    return `${Math.round(score * 100 - 0.7, 2)}% Compatibility`;
   };
 
   const toggleSortOrder = () => setSortAlphabetically(!sortAlphabetically);
@@ -440,7 +450,7 @@ const InvestorDatabase = () => {
         </div>
       </header>
 
-      {/* Filters 12344444*/}
+      {/* Filters */}
       <div className="filter-container">
         <div className="filter-row">
           <div className="search-box">
