@@ -508,7 +508,22 @@
     background-color: #4f46e5;
     animation: bounce 1.5s infinite ease-in-out;
 }
-
+.gemini-summarize-button {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    background: linear-gradient(45deg, #6e2fd1, #b00b9c);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s ease-in-out;
+  }
+  
+  .gemini-summarize-button:hover {
+    background: linear-gradient(45deg, #8c44f4, #d10bb8);
+  }
+  
 .loading-dot.dot-1 {
     animation-delay: 0s;
 }
