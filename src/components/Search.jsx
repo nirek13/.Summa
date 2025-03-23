@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import './InvestorDatabase.css'; // Your combined styles
 
 // Helper functions to generate filter values from the final, API-based investor list
@@ -443,124 +442,136 @@ const InvestorDatabase = () => {
   return (
     <div className="app-container">
       {/* Header */}
-      <header className="header">
-        <div className="header-content centered">
-          <h1>Discover the Top VCs Ready to Back Your Vision</h1>
-          <p>Find the perfect investors for your startup</p>
+      <header className="header" style={{ marginBottom: '20px' }}>
+        <div className="header-content centered" style={{ marginTop: '10px' }}>
+          <h1 style={{ marginBottom: '6px' }}>Discover the Top VCs Ready to Back Your Vision</h1>
+          <p style={{ marginTop: '0', fontSize: '16px' }}>Find the perfect investors for your startup</p>
         </div>
       </header>
 
-      {/* Filters */}
-      <div className="filter-container">
-        <div className="filter-row">
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search investors..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-            <svg
-              className="search-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clipRule="evenodd"
-              />
-            </svg>
+      {/* Everything in one row: filters on the left, new data on the right */}
+      <div className="toolbar-row">
+        {/* Filters */}
+        <div className="filter-container" style={{ padding: '16px 20px' }}>
+          <div className="filter-row" style={{ gap: '10px', flexWrap: 'wrap' }}>
+            {/* Search */}
+            <div className="filter-group">
+              <label className="filter-label">Search</label>
+              <div className="search-box" style={{ width: '220px' }}>
+                <input
+                  type="text"
+                  placeholder="Search investors..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                <svg
+                  className="search-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Investor Type */}
+            <div className="filter-group">
+              <label className="filter-label">Investor Type</label>
+              <select
+                className="filter-select"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                style={{ width: '160px' }}
+              >
+                {getInvestorTypes(investors).map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Region */}
+            <div className="filter-group">
+              <label className="filter-label">Region</label>
+              <select
+                className="filter-select"
+                value={regionFilter}
+                onChange={(e) => setRegionFilter(e.target.value)}
+                style={{ width: '140px' }}
+              >
+                {getRegions(investors).map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Stage */}
+            <div className="filter-group">
+              <label className="filter-label">Stage</label>
+              <select
+                className="filter-select"
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+                style={{ width: '140px' }}
+              >
+                {getStages(investors).map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stage}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Check Size */}
+            <div className="filter-group">
+              <label className="filter-label">Check Size</label>
+              <select
+                className="filter-select"
+                value={checkSizeFilter}
+                onChange={(e) => setCheckSizeFilter(e.target.value)}
+                style={{ width: '160px' }}
+              >
+                {getCheckSizes().map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="filter-select">
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="" disabled>
-                Investor Type
-              </option>
-              {getInvestorTypes(investors).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+          <div className="sort-toggle">
+            <label className="toggle-switch">
+              <input type="checkbox" checked={sortAlphabetically} onChange={toggleSortOrder} />
+              <span className="toggle-slider"></span>
+            </label>
+            <span className="toggle-label">Sort alphabetically</span>
           </div>
 
-          <div className="filter-select">
-            <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-              <option value="" disabled>
-                Region
-              </option>
-              {getRegions(investors).map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
+          <div className="filter-footer">
+            <p className="result-count">
+              Showing {filteredInvestors.length} of {investors.length} investors
+            </p>
+            <button onClick={resetFilters} className="reset-button">
+              Reset Filters
+            </button>
           </div>
+        </div>
 
-          <div className="filter-select">
-            <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>
-              <option value="" disabled>
-                Stage
-              </option>
-              {getStages(investors).map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-select">
-            <select value={checkSizeFilter} onChange={(e) => setCheckSizeFilter(e.target.value)}>
-              <option value="" disabled>
-                Check Size
-              </option>
-              {getCheckSizes().map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-
+        {/* New data container for reanalyzing */}
+        <div className="new-data-container">
+          <h3>New Data?</h3>
           <button onClick={handleRefresh} className="reanalyze-button">
-            <svg
-              className="refresh-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M23 4v6h-6"></path>
-              <path d="M1 20v-6h6"></path>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
-              <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
-            </svg>
-            Reanalyze matches
-          </button>
-        </div>
-
-        <div className="sort-toggle">
-          <label className="toggle-switch">
-            <input type="checkbox" checked={sortAlphabetically} onChange={toggleSortOrder} />
-            <span className="toggle-slider"></span>
-          </label>
-          <span className="toggle-label">Sort alphabetically</span>
-        </div>
-
-        <div className="filter-footer">
-          <p className="result-count">
-            Showing {filteredInvestors.length} of {investors.length} investors
-          </p>
-          <button onClick={resetFilters} className="reset-button">
-            Reset Filters
+            Reanalyze
           </button>
         </div>
       </div>
@@ -673,13 +684,13 @@ const InvestorDatabase = () => {
                       </a>
                     )}
                     <a
-  href={`/chat?name=${encodedName}&type=${encodedType}&thesis=${encodedThesis}&checkSize=${encodedCheckSize}&geography=${encodedGeography}&stages=${encodedStages}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="gemini-summarize-button"
->
-  Summarize with Gemini
-</a>
+                      href={`/chat?name=${encodedName}&type=${encodedType}&thesis=${encodedThesis}&checkSize=${encodedCheckSize}&geography=${encodedGeography}&stages=${encodedStages}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gemini-summarize-button"
+                    >
+                      Summarize with Gemini
+                    </a>
                   </div>
                 </div>
               </div>
