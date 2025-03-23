@@ -1,22 +1,12 @@
-/******************************************************
- * server.js (Node/Express server for CFO chatbot)
- *****************************************************/
-
-require('dotenv').config();  // Loads environment variables from .env
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-/****
- * 1. Setup Express
- */
 const app = express();
-app.use(cors());             // Allow cross-origin from React frontend
-app.use(express.json());     // Parse incoming JSON requests
+app.use(cors());
+app.use(express.json());
 
-/**
- * 2. Initialize Gemini client
- */
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) {
   console.error("❌ Missing GEMINI_API_KEY in .env!");
@@ -26,74 +16,82 @@ if (!GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-/**
- * 3. Define an endpoint to handle chat requests
- */
+// In-memory session memory store. For production, use a database or Redis.
+const sessions = {};
+
+// -------------------------------------------------------
+// /api/chat endpoint with conversation memory
+// -------------------------------------------------------
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message = '', attachments = [] } = req.body;
-
-    // Format attachment names (for later extension if needed)
-    const attachmentNames = attachments.map(a => a.name).join(', ');
-
-    // CFO-specific prompt engineering with Markdown formatting instructions
+    const { sessionId, message = '', attachments = [] } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ text: 'Session ID missing.' });
+    }
+    // Retrieve or initialize conversation history for the session:
+    let conversationHistory = sessions[sessionId] || '';
+    
+    // Append the new user message to the conversation history
+    conversationHistory += `\nUser: ${message}`;
+    
+    // Build the prompt with the full conversation context
     let prompt = `
-You are an AI assistant that provides clean, professional summaries of venture capital firms and angel investors for startup founders.
+You are an AI assistant that provides clean, professional summaries and follow-up answers regarding venture capital firms and angel investors.
+The conversation so far:
+${conversationHistory}
 
-When generating responses:
-- Do not use Markdown symbols (e.g., **, __).
-- Format your output in plain text using line breaks and bullet points.
-
-Follow this structure:
-
-Investor Name: [Name]
-Type: [VC Firm or Angel Investor]
-Location: [City, Country or Region]
-Summary:
-- [Short description of what they do and who they invest in]
-
-Founders / Key Partners:
-- [Names]
-
-Investment Thesis:
-- [Their focus, industry, or strategic interests]
-
-Typical Check Size: [e.g., $500K – $5M]
-Stages Invested: [e.g., Pre-seed, Seed, Series A]
-
-Notable Portfolio Companies:
-- [List]
-
-Contact Info: [If public]
-Recent News or Insights:
-- [Optional]
-
-User message: ${message}
-`;
-
-
+User: ${message}
+    `;
     if (attachments.length > 0) {
+      const attachmentNames = attachments.map(a => a.name).join(', ');
       prompt += `\n\n[Attached files: ${attachmentNames}]`;
     }
-
-    // Generate response from Gemini
+    
     const result = await model.generateContent(prompt);
     const geminiReply = result?.response?.text() ?? "No response from Gemini.";
-
-    // Send result to frontend
+    
+    // Update conversation history with assistant's reply
+    conversationHistory += `\nAssistant: ${geminiReply}`;
+    sessions[sessionId] = conversationHistory;
+    
     return res.json({ text: geminiReply });
-
   } catch (error) {
-    console.error("❗ Error calling Gemini API:", error);
+    console.error("Error calling Gemini API:", error);
     return res.status(500).json({
       text: "Sorry, there was an error processing your request. Please try again later."
     });
   }
 });
 
-/**
- * 4. Start the server
- */
+// -------------------------------------------------------
+// /api/deepresearch endpoint for detailed research queries
+// -------------------------------------------------------
+app.post('/api/deepresearch', async (req, res) => {
+  try {
+    const { query = '' } = req.body;
+    const deepResearchPrompt = `
+You are an expert research assistant. Perform deep, detailed research on the topic below.
+Include thorough analysis, key insights, and supporting data or bullet points where applicable.
+
+Topic: ${query}
+
+Provide your analysis in plain text.
+    `.trim();
+
+    const result = await model.generateContent(deepResearchPrompt);
+    const researchReply = result?.response?.text() ?? "No response from Gemini.";
+    return res.json({ text: researchReply });
+  } catch (error) {
+    console.error("Error during deep research:", error);
+    return res.status(500).json({
+      text: "Deep research failed. Please try again."
+    });
+  }
+});
+
+// -------------------------------------------------------
+// Start the server
+// -------------------------------------------------------
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running at http://localhost:${PORT}`);
