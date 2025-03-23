@@ -425,7 +425,7 @@ const SignupFlow = () => {
     useEffect(() => {
         const password = formData.password;
         setPasswordRequirements({
-            length: password.length >= 5,
+            length: password.length >= 8,
             uppercase: /[A-Z]/.test(password),
             lowercase: /[a-z]/.test(password),
             number: /[0-9]/.test(password),
@@ -433,17 +433,32 @@ const SignupFlow = () => {
         });
     }, [formData.password]);
 
+// At the top of your component, add:
+    const [focusedInput, setFocusedInput] = useState(null);
+    const inputRefs = {};
+
+// Add a function to handle focus events
+    const handleFocus = (e) => {
+        setFocusedInput(e.target.name);
+    };
+
+// Modify your handleChange function:
     const handleChange = (e) => {
         const { name, value } = e.target;
-    
-        setFormData(prevState => {
-            // Only update if the value has changed
-            if (prevState[name] === value) return prevState; 
-            return { ...prevState, [name]: value };
-        });
-    };
-    
+        setFormData(prev => ({ ...prev, [name]: value }));
 
+        // Clear error for the field being edited
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
+    };
+
+// After your state update, restore focus
+    useEffect(() => {
+        if (focusedInput && inputRefs[focusedInput]) {
+            inputRefs[focusedInput].focus();
+        }
+    }, [formData, errors, focusedInput]);
     const handleMultiSelect = (e) => {
         const { name } = e.target;
         const values = Array.from(e.target.selectedOptions, option => option.value);
@@ -578,6 +593,13 @@ const SignupFlow = () => {
     const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, multiple, required = false, error }) => {
         const Icon = icon;
 
+        // Initialize ref if needed
+        useEffect(() => {
+            if (!inputRefs[name]) {
+                inputRefs[name] = React.createRef();
+            }
+        }, [name]);
+
         return (
             <div style={styles.formRow}>
                 <label style={styles.label} htmlFor={name}>
@@ -589,6 +611,8 @@ const SignupFlow = () => {
 
                 {options ? (
                     <select
+                        ref={(el) => inputRefs[name] = el}
+                        onFocus={handleFocus}
                         style={{...styles.select, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
@@ -606,15 +630,17 @@ const SignupFlow = () => {
                     </select>
                 ) : type === "password" ? (
                     <div style={{ position: 'relative' }}>
-                        <input
-                            style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
-                            id={name}
-                            name={name}
-                            type={passwordVisible ? "text" : "password"}
-                            value={value}
-                            onChange={onChange}
-                            placeholder={placeholder}
-                        />
+          <input
+              ref={(el) => inputRefs[name] = el}
+              onFocus={handleFocus}
+              style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+              id={name}
+              name={name}
+              type={passwordVisible ? "text" : "password"}
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+          />
                         <button
                             type="button"
                             onClick={() => setPasswordVisible(!passwordVisible)}
@@ -634,6 +660,8 @@ const SignupFlow = () => {
                     </div>
                 ) : (
                     <input
+                        ref={(el) => inputRefs[name] = el}
+                        onFocus={handleFocus}
                         style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
@@ -643,12 +671,11 @@ const SignupFlow = () => {
                         placeholder={placeholder}
                     />
                 )}
-                
+
                 {error && <p style={styles.errorText}>{error}</p>}
             </div>
         );
     };
-
     // Input options
     const industryOptions = [
         { value: 'fintech', label: 'Fintech' },
@@ -1135,7 +1162,7 @@ const SignupFlow = () => {
                                 ...styles.passwordRequirementItem,
                                 ...(passwordRequirements.length ? styles.requirementMet : {})
                             }}>
-                                {passwordRequirements.length ? '✓' : '○'} At least 5 characters
+                                {passwordRequirements.length ? '✓' : '○'} At least 8 characters
                             </div>
                             <div style={{
                                 ...styles.passwordRequirementItem,
