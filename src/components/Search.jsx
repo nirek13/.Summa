@@ -376,7 +376,7 @@ const InvestorDatabase = () => {
     if (typeof score !== 'number' || isNaN(score)) {
       return '0% Compatibility';
     }
-    return `${Math.round(score * 100, 2) - 0.7}% Compatibility`;
+    return `${Math.round(score * 100 - .7, 2) }% Compatibility`;
   };
 
   const toggleSortOrder = () => setSortAlphabetically(!sortAlphabetically);
