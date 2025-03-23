@@ -2,6 +2,95 @@ import Cookies from 'js-cookie';
 import { ArrowRight, BarChart2, Briefcase, Building, DollarSign, Edit, FileText, Lock, Mail, MapPin, Target, User, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+function SearchableLocationDropdown({ label, name, value, onChange, error, options }) {
+    // We store typed text locally, so we don't overwrite it every time 
+    // the parent formData updates.
+    const [searchTerm, setSearchTerm] = React.useState(value || '');
+    const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
+    // If the parent changes its "value" externally (e.g., reset form),
+    // make sure we update our local text too:
+    React.useEffect(() => {
+        setSearchTerm(value || '');
+    }, [value]);
+
+    // Filter the options as the user types:
+    const filteredOptions = options.filter((opt) =>
+        opt.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    function handleChangeSearchTerm(e) {
+        setSearchTerm(e.target.value);
+        setDropdownOpen(true);
+    }
+
+    function handleSelect(option) {
+        // Notify parent of this final choice:
+        onChange({ target: { name, value: option } });
+        // Also put that choice in our local input:
+        setSearchTerm(option);
+        setDropdownOpen(false);
+    }
+
+    return (
+        <div style={styles.formRow}>
+            <label style={styles.label}>
+                <div style={styles.labelWithIcon}>
+                    <MapPin style={styles.icon} />
+                    <span>{label}</span>
+                </div>
+            </label>
+
+            <input
+                type="text"
+                style={{
+                    ...styles.input,
+                    ...(error ? { borderColor: '#E53E3E' } : {})
+                }}
+                placeholder="Search your location..."
+                value={searchTerm}
+                onChange={handleChangeSearchTerm}
+                onFocus={() => setDropdownOpen(true)}
+            />
+
+            {dropdownOpen && (
+                <div
+                    style={{
+                        border: '1px solid #B6C2CE',
+                        backgroundColor: 'white',
+                        maxHeight: '150px',
+                        overflowY: 'auto',
+                        marginTop: '2px',
+                        borderRadius: '4px',
+                        position: 'relative'
+                    }}
+                >
+                    {filteredOptions.map((opt) => (
+                        <div
+                            key={opt}
+                            onClick={() => handleSelect(opt)}
+                            style={{
+                                padding: '8px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #EEE'
+                            }}
+                        >
+                            {opt}
+                        </div>
+                    ))}
+                    {filteredOptions.length === 0 && (
+                        <div style={{ padding: '8px', color: '#688990' }}>
+                            No match found
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {error && <p style={styles.errorText}>{error}</p>}
+        </div>
+    );
+}
+
 // CSS styles
 const styles = {
     container: {
@@ -390,7 +479,7 @@ const SignupFlow = () => {
 
         // if step=3 => final step => set isSignedIn => step=4 => only then save to localStorage
         if (step === 3) {
-            Cookies.set('isSignedIn','true');
+            Cookies.set('isSignedIn', 'true');
             // Save form data to localStorage once user completes
             saveFormDataToLocalStorage();
             setStep(4);
@@ -399,7 +488,7 @@ const SignupFlow = () => {
 
         // if in edit mode => mark that section as done
         if (Object.values(editMode).some(val => val)) {
-            switch(step) {
+            switch (step) {
                 case 0: setEditMode(prev => ({ ...prev, credentials: false })); break;
                 case 1: setEditMode(prev => ({ ...prev, startup: false })); break;
                 case 2: setEditMode(prev => ({ ...prev, additional: false })); break;
@@ -424,7 +513,7 @@ const SignupFlow = () => {
     // startEditing => sets the step accordingly
     const startEditing = (section) => {
         setEditMode(prev => ({ ...prev, [section]: true }));
-        switch(section) {
+        switch (section) {
             case 'credentials': setStep(0); break;
             case 'startup': setStep(1); break;
             case 'additional': setStep(2); break;
@@ -437,7 +526,7 @@ const SignupFlow = () => {
     const saveChanges = (section) => {
         setEditMode(prev => ({ ...prev, [section]: false }));
         saveFormDataToLocalStorage()
-        setStep(4); 
+        setStep(4);
     };
 
     // Reusable input with icon
@@ -466,7 +555,7 @@ const SignupFlow = () => {
                     <select
                         ref={el => inputRefs[name] = el}
                         onFocus={handleFocus}
-                        style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                        style={{ ...styles.input, ...(error ? { borderColor: '#E53E3E' } : {}) }}
                         id={name}
                         name={name}
                         value={value}
@@ -484,7 +573,7 @@ const SignupFlow = () => {
                         <input
                             ref={el => inputRefs[name] = el}
                             onFocus={handleFocus}
-                            style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                            style={{ ...styles.input, ...(error ? { borderColor: '#E53E3E' } : {}) }}
                             id={name}
                             name={name}
                             type={passwordVisible ? "text" : "password"}
@@ -513,7 +602,7 @@ const SignupFlow = () => {
                     <input
                         ref={el => inputRefs[name] = el}
                         onFocus={handleFocus}
-                        style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                        style={{ ...styles.input, ...(error ? { borderColor: '#E53E3E' } : {}) }}
                         id={name}
                         name={name}
                         type={type}
@@ -537,17 +626,15 @@ const SignupFlow = () => {
         { value: 'ai', label: 'AI / Machine Learning' },
         { value: 'edtech', label: 'Edtech' },
         { value: 'cleantech', label: 'Cleantech' },
-        { value: 'other', label: 'Other' }
     ];
 
     const stageOptions = [
-        { value: 'idea', label: 'Idea Stage' },
-        { value: 'pre-seed', label: 'Pre-Seed' },
-        { value: 'seed', label: 'Seed' },
-        { value: 'series-a', label: 'Series A' },
-        { value: 'series-b', label: 'Series B' },
-        { value: 'series-c', label: 'Series C+' },
-        { value: 'growth', label: 'Growth' }
+        { value: 'early revenue', label: 'Early Revenue' },
+        { value: 'growth', label: 'Growth' },
+        { value: 'idea or patent', label: 'Idea or Patent' },
+        { value: 'pre-ipo', label: 'Pre-IPO' },
+        { value: 'prototype', label: 'Prototype' },
+        { value: 'scaling', label: 'Scaling' }
     ];
 
     const businessModelOptions = [
@@ -558,6 +645,204 @@ const SignupFlow = () => {
         { value: 'marketplace', label: 'Marketplace' },
         { value: 'hardware', label: 'Hardware' },
         { value: 'subscription', label: 'Subscription' }
+    ];
+
+    const locations = [
+        "Global",
+        "Afghanistan",
+        "Albania",
+        "Algeria",
+        "Andorra",
+        "Angola",
+        "Antigua And Barbuda",
+        "Argentina",
+        "Armenia",
+        "Australia",
+        "Austria",
+        "Azerbaijan",
+        "Bahamas",
+        "Bahrain",
+        "Bangladesh",
+        "Barbados",
+        "Belarus",
+        "Belgium",
+        "Belize",
+        "Benin",
+        "Bhutan",
+        "Bolivia",
+        "Bosnia And Herzegovina",
+        "Botswana",
+        "Brazil",
+        "Brunei",
+        "Bulgaria",
+        "Burkina Faso",
+        "Burundi",
+        "Cabo Verde",
+        "Cambodia",
+        "Cameroon",
+        "Canada",
+        "Central African Republic",
+        "Chad",
+        "Chile",
+        "China",
+        "Colombia",
+        "Comoros",
+        "Congo (Brazzaville)",
+        "Congo (Kinshasa)",
+        "Costa Rica",
+        "CÃ´te D'Ivoire",
+        "Croatia",
+        "Cuba",
+        "Cyprus",
+        "Czech Republic",
+        "Denmark",
+        "Djibouti",
+        "Dominica",
+        "Dominican Republic",
+        "Ecuador",
+        "Egypt",
+        "El Salvador",
+        "Equatorial Guinea",
+        "Eritrea",
+        "Estonia",
+        "Eswatini",
+        "Ethiopia",
+        "Fiji",
+        "Finland",
+        "France",
+        "Gabon",
+        "Gambia",
+        "Georgia",
+        "Germany",
+        "Ghana",
+        "Greece",
+        "Grenada",
+        "Guatemala",
+        "Guinea",
+        "Guinea-Bissau",
+        "Guyana",
+        "Haiti",
+        "Honduras",
+        "Hungary",
+        "Iceland",
+        "India",
+        "Indonesia",
+        "Iran",
+        "Iraq",
+        "Ireland",
+        "Israel",
+        "Italy",
+        "Jamaica",
+        "Japan",
+        "Jordan",
+        "Kazakhstan",
+        "Kenya",
+        "Kiribati",
+        "Kuwait",
+        "Kyrgyzstan",
+        "Laos",
+        "Latvia",
+        "Lebanon",
+        "Lesotho",
+        "Liberia",
+        "Libya",
+        "Liechtenstein",
+        "Lithuania",
+        "Luxembourg",
+        "Madagascar",
+        "Malawi",
+        "Malaysia",
+        "Maldives",
+        "Mali",
+        "Malta",
+        "Marshall Islands",
+        "Mauritania",
+        "Mauritius",
+        "Mexico",
+        "Micronesia",
+        "Moldova",
+        "Monaco",
+        "Mongolia",
+        "Montenegro",
+        "Morocco",
+        "Mozambique",
+        "Myanmar",
+        "Namibia",
+        "Nauru",
+        "Nepal",
+        "Netherlands",
+        "New Zealand",
+        "Nicaragua",
+        "Niger",
+        "Nigeria",
+        "North Macedonia",
+        "Norway",
+        "Oman",
+        "Pakistan",
+        "Palau",
+        "Panama",
+        "Papua New Guinea",
+        "Paraguay",
+        "Peru",
+        "Philippines",
+        "Poland",
+        "Portugal",
+        "Qatar",
+        "Romania",
+        "Russia",
+        "Rwanda",
+        "Saint Kitts And Nevis",
+        "Saint Lucia",
+        "Saint Vincent And The Grenadines",
+        "Samoa",
+        "San Marino",
+        "Sao Tome And Principe",
+        "Saudi Arabia",
+        "Senegal",
+        "Serbia",
+        "Seychelles",
+        "Sierra Leone",
+        "Singapore",
+        "Slovakia",
+        "Slovenia",
+        "Solomon Islands",
+        "Somalia",
+        "South Africa",
+        "South Korea",
+        "South Sudan",
+        "Spain",
+        "Sri Lanka",
+        "Sudan",
+        "Suriname",
+        "Sweden",
+        "Switzerland",
+        "Syria",
+        "Taiwan",
+        "Tajikistan",
+        "Tanzania",
+        "Thailand",
+        "Timor-Leste",
+        "Togo",
+        "Tonga",
+        "Trinidad And Tobago",
+        "Tunisia",
+        "Turkey",
+        "Turkmenistan",
+        "Tuvalu",
+        "Uganda",
+        "Ukraine",
+        "United Arab Emirates",
+        "United Kingdom",
+        "United States",
+        "Uruguay",
+        "Uzbekistan",
+        "Vanuatu",
+        "Vatican City",
+        "Venezuela",
+        "Vietnam",
+        "Yemen",
+        "Zambia",
+        "Zimbabwe"
     ];
 
     // helper to map value => label
@@ -573,7 +858,7 @@ const SignupFlow = () => {
         return (
             <div style={styles.progressContainer}>
                 <div style={styles.progressBar}>
-                    <div style={{...styles.progressIndicator, width: `${progress}%`}} />
+                    <div style={{ ...styles.progressIndicator, width: `${progress}%` }} />
                 </div>
                 <div style={styles.progressLabels}>
                     <span>Credentials</span>
@@ -634,7 +919,7 @@ const SignupFlow = () => {
                                     <div style={styles.profileValue}>{formData.companyName}</div>
                                 </div>
                             </div>
-                            
+
                             <div style={styles.profileSection}>
                                 <h3 style={styles.profileSectionTitle}>
                                     Startup Information
@@ -666,7 +951,9 @@ const SignupFlow = () => {
                                 </div>
                                 <div style={styles.profileDetail}>
                                     <div style={styles.profileLabel}>Location</div>
-                                    <div style={styles.profileValue}>{formData.location}</div>
+                                    <div style={styles.profileValue}>
+                                        {getLabelFromValue(locations, formData.location)}
+                                    </div>
                                 </div>
                             </div>
 
@@ -709,7 +996,7 @@ const SignupFlow = () => {
                                 <div style={styles.profileDetail}>
                                     <div style={styles.profileLabel}>Minimum ($)</div>
                                     <div style={styles.profileValue}>
-                                        {formData.checkSizeMin 
+                                        {formData.checkSizeMin
                                             ? `$${parseInt(formData.checkSizeMin).toLocaleString()}`
                                             : 'Not specified'}
                                     </div>
@@ -729,7 +1016,7 @@ const SignupFlow = () => {
                             <div></div>
                             <a href='/investors'>
                                 <button
-                                    style={{...styles.button, ...styles.primaryButton}}
+                                    style={{ ...styles.button, ...styles.primaryButton }}
                                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                                 >
@@ -825,7 +1112,7 @@ const SignupFlow = () => {
                                 <div></div>
                             ) : (
                                 <button
-                                    style={{...styles.button, ...styles.secondaryButton}}
+                                    style={{ ...styles.button, ...styles.secondaryButton }}
                                     onClick={prevStep}
                                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
                                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
@@ -835,7 +1122,7 @@ const SignupFlow = () => {
                             )}
 
                             <button
-                                style={{...styles.button, ...styles.primaryButton}}
+                                style={{ ...styles.button, ...styles.primaryButton }}
                                 onClick={editMode.credentials ? () => saveChanges('credentials') : nextStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
@@ -882,18 +1169,18 @@ const SignupFlow = () => {
                             options={businessModelOptions}
                         />
 
-                        <InputWithIcon
-                            icon={MapPin}
+                        <SearchableLocationDropdown
                             label="Location"
                             name="location"
                             value={formData.location}
                             onChange={handleChange}
-                            placeholder="e.g. San Francisco, CA"
+                            error={errors.location}
+                            options={locations}
                         />
 
                         <div style={styles.buttonContainer}>
                             <button
-                                style={{...styles.button, ...styles.secondaryButton}}
+                                style={{ ...styles.button, ...styles.secondaryButton }}
                                 onClick={prevStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
@@ -902,7 +1189,7 @@ const SignupFlow = () => {
                             </button>
 
                             <button
-                                style={{...styles.button, ...styles.primaryButton}}
+                                style={{ ...styles.button, ...styles.primaryButton }}
                                 onClick={editMode.startup ? () => saveChanges('startup') : nextStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
@@ -980,7 +1267,7 @@ const SignupFlow = () => {
 
                         <div style={styles.buttonContainer}>
                             <button
-                                style={{...styles.button, ...styles.secondaryButton}}
+                                style={{ ...styles.button, ...styles.secondaryButton }}
                                 onClick={prevStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
@@ -989,7 +1276,7 @@ const SignupFlow = () => {
                             </button>
 
                             <button
-                                style={{...styles.button, ...styles.primaryButton}}
+                                style={{ ...styles.button, ...styles.primaryButton }}
                                 onClick={editMode.additional ? () => saveChanges('additional') : nextStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
@@ -1044,7 +1331,7 @@ const SignupFlow = () => {
 
                         <div style={styles.buttonContainer}>
                             <button
-                                style={{...styles.button, ...styles.secondaryButton}}
+                                style={{ ...styles.button, ...styles.secondaryButton }}
                                 onClick={prevStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
@@ -1053,7 +1340,7 @@ const SignupFlow = () => {
                             </button>
 
                             <button
-                                style={{...styles.button, ...styles.primaryButton}}
+                                style={{ ...styles.button, ...styles.primaryButton }}
                                 // On final step => nextStep calls => sets isSignedIn => saves to localStorage => step=4
                                 onClick={editMode.checkSize ? () => saveChanges('checkSize') : nextStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
