@@ -69,7 +69,7 @@ const StartupMatchingPlatform = () => {
                             perfect investors for your startup
                         </h1>
                         <p style={styles.heroText}>
-                            Our intelligent matching platform connects founders with investors, mentors, and business
+                            Our intelligent matching platform connects founders with investors and business
                             expertise — so you can focus on building your vision.
                         </p>
                         <div style={styles.buttonGroup}>
@@ -144,14 +144,14 @@ const StartupMatchingPlatform = () => {
 
                             {activeTab === 'advise' && (
                                 <>
-                                    <h3 style={styles.tabTitle}>Your virtual CFO and business advisor</h3>
+                                    <h3 style={styles.tabTitle}>Your virtual business advisor</h3>
                                     <p style={styles.tabDescription}>
                                         Get personalized financial guidance, business strategy advice, and
-                                        cash flow projections from our AI-powered virtual CFO — helping you
+                                        cash flow projections from our AI-powered virtual chatbot — helping you
                                         make sound business decisions without the executive-level costs.
                                     </p>
                                     <button style={{ ...styles.secondaryButton }}>
-                                        Learn about virtual CFO
+                                        Learn about our chatbot
                                     </button>
                                 </>
                             )}
@@ -173,7 +173,7 @@ const StartupMatchingPlatform = () => {
                         {[
                             {
                                 title: "Investor Matching",
-                                description: "Our algorithm connects you with investors who are actively seeking opportunities in your space and stage, based on over 50 alignment factors.",
+                                description: "Our algorithm connects you with investors who are actively seeking opportunities in your space and stage",
                                 icon: (
                                     <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -181,8 +181,8 @@ const StartupMatchingPlatform = () => {
                                 )
                             },
                             {
-                                title: "Virtual CFO",
-                                description: "Access sophisticated financial modeling, runway analysis, and business advice tailored to your startup's unique position and challenges.",
+                                title: "Founder to VC AI Analysis",
+                                description: "Business advice tailored to your startup's unique position and challenges.",
                                 icon: (
                                     <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
