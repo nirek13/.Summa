@@ -425,7 +425,7 @@ const SignupFlow = () => {
     useEffect(() => {
         const password = formData.password;
         setPasswordRequirements({
-            length: password.length >= 8,
+            length: password.length >= 5,
             uppercase: /[A-Z]/.test(password),
             lowercase: /[a-z]/.test(password),
             number: /[0-9]/.test(password),
@@ -435,13 +435,14 @@ const SignupFlow = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        
-        // Clear error for the field being edited
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
-        }
+    
+        setFormData(prevState => {
+            // Only update if the value has changed
+            if (prevState[name] === value) return prevState; 
+            return { ...prevState, [name]: value };
+        });
     };
+    
 
     const handleMultiSelect = (e) => {
         const { name } = e.target;
@@ -1134,7 +1135,7 @@ const SignupFlow = () => {
                                 ...styles.passwordRequirementItem,
                                 ...(passwordRequirements.length ? styles.requirementMet : {})
                             }}>
-                                {passwordRequirements.length ? '✓' : '○'} At least 8 characters
+                                {passwordRequirements.length ? '✓' : '○'} At least 5 characters
                             </div>
                             <div style={{
                                 ...styles.passwordRequirementItem,
