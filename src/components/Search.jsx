@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
+import { Link } from 'react-router-dom';  // <-- import Link
 import './InvestorDatabase.css';
 
 const InvestorDatabase = () => {
@@ -100,14 +101,10 @@ const InvestorDatabase = () => {
         results = results.filter((investor) => {
           const name = investor['Investor Name'];
           if (typeFilter === 'VC Firm' && name.includes('VC firm')) return true;
-          if (typeFilter === 'Angel Network' && name.includes('Angel network'))
-            return true;
-          if (typeFilter === 'Family Office' && name.includes('Family office'))
-            return true;
-          if (typeFilter === 'Solo Angel' && name.includes('Solo angel'))
-            return true;
-          if (typeFilter === 'Startup Studio' && name.includes('Startup studio'))
-            return true;
+          if (typeFilter === 'Angel Network' && name.includes('Angel network')) return true;
+          if (typeFilter === 'Family Office' && name.includes('Family office')) return true;
+          if (typeFilter === 'Solo Angel' && name.includes('Solo angel')) return true;
+          if (typeFilter === 'Startup Studio' && name.includes('Startup studio')) return true;
           return false;
         });
       }
@@ -134,37 +131,37 @@ const InvestorDatabase = () => {
         results = results.filter((investor) => {
           const normalizeCheckSize = (checkSize) =>
             checkSize.replace(/\s+/g, '').toLowerCase();
-          const checkSize = normalizeCheckSize(investor['Check Size']);
+          const checkSizeValue = normalizeCheckSize(investor['Check Size']);
           if (checkSizeFilter === 'Under $100k') {
             return (
-              checkSize.includes('$1k') ||
-              checkSize.includes('$5k') ||
-              checkSize.includes('$10k') ||
-              checkSize.includes('$25k') ||
-              checkSize.includes('$50k')
+              checkSizeValue.includes('$1k') ||
+              checkSizeValue.includes('$5k') ||
+              checkSizeValue.includes('$10k') ||
+              checkSizeValue.includes('$25k') ||
+              checkSizeValue.includes('$50k')
             );
           } else if (checkSizeFilter === '$100k-$1M') {
             return (
-              checkSize.includes('$100k') ||
-              checkSize.includes('$150k') ||
-              checkSize.includes('$200k') ||
-              checkSize.includes('$500k') ||
-              (checkSize.includes('$1m') && !checkSize.includes('$10m'))
+              checkSizeValue.includes('$100k') ||
+              checkSizeValue.includes('$150k') ||
+              checkSizeValue.includes('$200k') ||
+              checkSizeValue.includes('$500k') ||
+              (checkSizeValue.includes('$1m') && !checkSizeValue.includes('$10m'))
             );
           } else if (checkSizeFilter === '$1M-$5M') {
             return (
-              (checkSize.includes('$1m') ||
-                checkSize.includes('$2m') ||
-                checkSize.includes('$3m') ||
-                checkSize.includes('$4m') ||
-                checkSize.includes('$5m')) &&
-              !checkSize.includes('$10m')
+              (checkSizeValue.includes('$1m') ||
+                checkSizeValue.includes('$2m') ||
+                checkSizeValue.includes('$3m') ||
+                checkSizeValue.includes('$4m') ||
+                checkSizeValue.includes('$5m')) &&
+              !checkSizeValue.includes('$10m')
             );
           } else if (checkSizeFilter === '$5M+') {
             return (
-              checkSize.includes('$5m') ||
-              checkSize.includes('$10m') ||
-              checkSize.includes('$20m')
+              checkSizeValue.includes('$5m') ||
+              checkSizeValue.includes('$10m') ||
+              checkSizeValue.includes('$20m')
             );
           }
           return false;
@@ -183,14 +180,14 @@ const InvestorDatabase = () => {
         const allInvestorsSorted = sortInvestorsByName([...investors]);
         const rankMap = new Map();
         allInvestorsSorted.forEach((investor, index) => {
-          const cleanName = cleanInvestorName(investor['Investor Name']);
-          rankMap.set(cleanName, index + 1);
+          const cName = cleanInvestorName(investor['Investor Name']);
+          rankMap.set(cName, index + 1);
         });
-        results = sortInvestorsByName(results).map((investor) => {
-          const cleanName = cleanInvestorName(investor['Investor Name']);
+        results = sortInvestorsByName(results).map((inv) => {
+          const cName = cleanInvestorName(inv['Investor Name']);
           return {
-            ...investor,
-            rank: rankMap.get(cleanName),
+            ...inv,
+            rank: rankMap.get(cName),
             totalCount: investors.length,
           };
         });
@@ -377,6 +374,7 @@ const InvestorDatabase = () => {
       {/* Results */}
       <div className="card-grid">
         {isLoading ? (
+          // Loading skeleton
           [...Array(6)].map((_, i) => (
             <div key={i} className="skeleton-card">
               <div className="skeleton-title"></div>
@@ -393,6 +391,15 @@ const InvestorDatabase = () => {
           filteredInvestors.map((investor, index) => {
             const investorType = getInvestorType(investor['Investor Name']);
             const cleanName = cleanInvestorName(investor['Investor Name']);
+
+            // Prepare data for the query params
+            const encodedName = encodeURIComponent(cleanName);
+            const encodedType = encodeURIComponent(investorType);
+            const encodedThesis = encodeURIComponent(investor['Investment Thesis'] || '');
+            const encodedCheckSize = encodeURIComponent(investor['Check Size'] || '');
+            const encodedGeography = encodeURIComponent(investor.Geography || '');
+            const encodedStages = encodeURIComponent(investor.Stages || '');
+
             return (
               <div key={index} className="investor-card">
                 <div className="card-content">
@@ -409,9 +416,9 @@ const InvestorDatabase = () => {
                   <div className="region-tags">
                     {investor.Geography.split(' ')
                       .filter((g) => !g.includes('+'))
-                      .map((region, i) => (
-                        <span key={i} className="region-tag">
-                          {region}
+                      .map((regionItem, i2) => (
+                        <span key={i2} className="region-tag">
+                          {regionItem}
                         </span>
                       ))}
                     {investor.Geography.split(' ').find((g) => g.includes('+')) && (
@@ -434,7 +441,7 @@ const InvestorDatabase = () => {
                   <div className="stage-tags">
                     {investor.Stages.split(' ')
                       .filter((s) => s.match(/\d\./))
-                      .map((stage, i) => {
+                      .map((stage, i3) => {
                         const stageMap = {
                           '1.': 'Idea/Patent',
                           '2.': 'Prototype',
@@ -443,7 +450,7 @@ const InvestorDatabase = () => {
                         };
                         const stageNum = stage.trim().replace(',', '');
                         return (
-                          <span key={i} className="stage-tag">
+                          <span key={i3} className="stage-tag">
                             {stageMap[stageNum] || stageNum}
                           </span>
                         );
@@ -459,6 +466,19 @@ const InvestorDatabase = () => {
                   >
                     Contact
                   </a>
+
+                  {/* NEW Summarize with Gemini Button */}
+                  <Link
+                    to={`/chat?name=${encodedName}
+                          &type=${encodedType}
+                          &thesis=${encodedThesis}
+                          &checkSize=${encodedCheckSize}
+                          &geography=${encodedGeography}
+                          &stages=${encodedStages}`}
+                    className="gemini-summarize-button"
+                  >
+                    Summarize with Gemini
+                  </Link>
                 </div>
               </div>
             );
