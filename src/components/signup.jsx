@@ -250,19 +250,6 @@ const styles = {
         textDecoration: 'underline',
         cursor: 'pointer'
     },
-    passwordRequirements: {
-        marginTop: '10px',
-        padding: '10px',
-        backgroundColor: '#F0F4F5',
-        borderRadius: '6px'
-    },
-    passwordRequirementItem: {
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: '12px',
-        color: '#688990',
-        marginBottom: '3px'
-    },
     requirementMet: {
         color: '#4D766E'
     },
@@ -302,15 +289,6 @@ const SignupFlow = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
 
-    // track password requirements
-    const [passwordRequirements, setPasswordRequirements] = useState({
-        length: false,
-        uppercase: false,
-        lowercase: false,
-        number: false,
-        special: false
-    });
-
     // input focusing
     const [focusedInput, setFocusedInput] = useState(null);
     const inputRefs = {};
@@ -349,20 +327,6 @@ const SignupFlow = () => {
             }
         }
     }, [step]);
-
-    // -----------------------------------------
-    //  Check password requirements on changes
-    // -----------------------------------------
-    useEffect(() => {
-        const password = formData.password;
-        setPasswordRequirements({
-            length: password.length >= 8,
-            uppercase: /[A-Z]/.test(password),
-            lowercase: /[a-z]/.test(password),
-            number: /[0-9]/.test(password),
-            special: /[^A-Za-z0-9]/.test(password)
-        });
-    }, [formData.password]);
 
     // restore focus
     useEffect(() => {
@@ -406,14 +370,6 @@ const SignupFlow = () => {
         }
         if (!formData.password) {
             newErrors.password = 'Password is required';
-        } else if (
-            !passwordRequirements.length ||
-            !passwordRequirements.uppercase ||
-            !passwordRequirements.lowercase ||
-            !passwordRequirements.number ||
-            !passwordRequirements.special
-        ) {
-            newErrors.password = 'Password does not meet all requirements';
         }
         if (!formData.companyName.trim()) {
             newErrors.companyName = 'Company name is required';
@@ -838,43 +794,6 @@ const SignupFlow = () => {
                             required={true}
                             error={errors.password}
                         />
-
-                        {/* Password tips */}
-                        <div style={styles.passwordRequirements}>
-                            <p style={{ fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
-                                Password Requirements:
-                            </p>
-                            <div style={{
-                                ...styles.passwordRequirementItem,
-                                ...(passwordRequirements.length ? styles.requirementMet : {})
-                            }}>
-                                {passwordRequirements.length ? '✓' : '○'} At least 8 characters
-                            </div>
-                            <div style={{
-                                ...styles.passwordRequirementItem,
-                                ...(passwordRequirements.uppercase ? styles.requirementMet : {})
-                            }}>
-                                {passwordRequirements.uppercase ? '✓' : '○'} At least one uppercase letter
-                            </div>
-                            <div style={{
-                                ...styles.passwordRequirementItem,
-                                ...(passwordRequirements.lowercase ? styles.requirementMet : {})
-                            }}>
-                                {passwordRequirements.lowercase ? '✓' : '○'} At least one lowercase letter
-                            </div>
-                            <div style={{
-                                ...styles.passwordRequirementItem,
-                                ...(passwordRequirements.number ? styles.requirementMet : {})
-                            }}>
-                                {passwordRequirements.number ? '✓' : '○'} At least one number
-                            </div>
-                            <div style={{
-                                ...styles.passwordRequirementItem,
-                                ...(passwordRequirements.special ? styles.requirementMet : {})
-                            }}>
-                                {passwordRequirements.special ? '✓' : '○'} At least one special character
-                            </div>
-                        </div>
 
                         <InputWithIcon
                             icon={Building}

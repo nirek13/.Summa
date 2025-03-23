@@ -567,7 +567,6 @@ const InvestorDatabase = () => {
           </div>
         </div>
 
-        {/* New data container for reanalyzing */}
         <div className="new-data-container">
           <h3>New Data?</h3>
           <button onClick={handleRefresh} className="reanalyze-button">
