@@ -97,7 +97,7 @@ const InvestorDatabase = () => {
 
     let messageIndex = 0;
 
-    // Animate progress from 0% up to ~92% over ~30s
+    // Animate progress from 0% up to ~92% over ~10s
     const progressInterval = setInterval(() => {
       setLoadingProgress((prev) => {
         // Switch the message every ~12 steps
@@ -112,7 +112,7 @@ const InvestorDatabase = () => {
         }
         return newProgress >= 92 ? 92 : newProgress;
       });
-    }, 326); // ~30s to reach 92%
+    }, 109); // ~10s to reach 92%
 
     return () => clearInterval(progressInterval);
   };
