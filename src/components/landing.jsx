@@ -78,7 +78,7 @@ const StartupMatchingPlatform = () => {
                                     Get Matched Today
                                 </button>
                             </a>
-                            <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran" target="_blank" rel="noopener noreferrer">
+                            <a href="https://youtu.be/R34Me_F1nYs" target="_blank" rel="noopener noreferrer">
                                 <button style={styles.secondaryButton}>How It Works</button>
                             </a>
                         </div>
