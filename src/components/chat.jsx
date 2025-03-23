@@ -233,6 +233,15 @@ const TableRenderer = ({ data }) => {
   );
 };
 
+// Add this small helper to interpret *italics* and **bold** in text
+function parseAsterisks(text) {
+  // Replace **something** with <strong>something</strong>
+  let replaced = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Then replace *something* with <em>something</em>
+  replaced = replaced.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  return replaced;
+}
+
 // -------------------------------------------------------
 // 4) Message Component
 // -------------------------------------------------------
@@ -245,10 +254,13 @@ const Message = ({ message, isUser }) => {
         {parts.map((part, idx) => {
           switch (part.type) {
             case 'text':
+              const styledContent = parseAsterisks(part.content);
               return (
-                <div key={idx} className="message-text">
-                  {part.content}
-                </div>
+                <div
+                  key={idx}
+                  className="message-text"
+                  dangerouslySetInnerHTML={{ __html: styledContent }}
+                />
               );
             case 'graph':
               return <GraphRenderer key={idx} data={part.content} />;
@@ -429,7 +441,7 @@ Stages: ${decodeURIComponent(stages)}
         <div className="chat-header">
           <div>
             <h2 className="chat-title">{investorName}</h2>
-            {isExpanded && <p className="chat-subtitle">How can we help you today?</p>}
+            {isExpanded && <p className="chat-subtitle">Ask anything about {investorName}</p>}
           </div>
           {messages.length > 0 && (
             <button onClick={toggleExpand} className="toggle-button">
@@ -447,6 +459,7 @@ Stages: ${decodeURIComponent(stages)}
                 <p className="empty-state-subtext">Start a conversation by typing a message below</p>
               </div>
             ) : (
+              // modify this are to call the function to parse each message and display the double * as bolded html and single * as italics in html appropriately
               messages.map((msg, i) => <Message key={i} message={msg} isUser={msg.isUser} />)
             )}
             {isTyping && (
