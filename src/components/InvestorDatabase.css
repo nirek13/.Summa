@@ -165,6 +165,7 @@
     background-color: white;
     transition: all 0.3s;
     animation: cardFadeIn 0.5s ease-out;
+    position:relative;
 }
 
 .investor-card:hover {
@@ -186,6 +187,10 @@
 
 .card-content {
     padding: 20px;
+   
+        padding-bottom: 60px; /* adjust based on footer height */
+  
+    
 }
 
 .card-header {
@@ -279,6 +284,10 @@
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid #eee;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .contact-info {
