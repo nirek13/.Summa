@@ -672,12 +672,14 @@ const InvestorDatabase = () => {
                         Contact
                       </a>
                     )}
-                    <Link
-                      to={`/chat?name=${encodedName}&type=${encodedType}&thesis=${encodedThesis}&checkSize=${encodedCheckSize}&geography=${encodedGeography}&stages=${encodedStages}`}
-                      className="gemini-summarize-button"
-                    >
-                      Summarize with Gemini
-                    </Link>
+                    <a
+  href={`/chat?name=${encodedName}&type=${encodedType}&thesis=${encodedThesis}&checkSize=${encodedCheckSize}&geography=${encodedGeography}&stages=${encodedStages}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="gemini-summarize-button"
+>
+  Summarize with Gemini
+</a>
                   </div>
                 </div>
               </div>
