@@ -137,7 +137,7 @@ const NavbarPage = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                                    <a
+                                    {/* <a
                                         href="/chat"
                                         style={{
                                             ...styles.specialNavLink,
@@ -147,7 +147,7 @@ const NavbarPage = () => {
                                         onMouseLeave={() => setHoveredLink(null)}
                                     >
                                         Chat
-                                    </a>
+                                    </a> */}
 
                                     <a
                                         href="/investors"
