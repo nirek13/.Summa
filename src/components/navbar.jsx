@@ -101,11 +101,7 @@ const NavbarPage = () => {
     // Detect scroll for navbar background effect
     useEffect(() => {
         const handleScroll = () => {
-            if (window.scrollY > 50) {
-                setScrolled(true);
-            } else {
-                setScrolled(false);
-            }
+            setScrolled(window.scrollY > 50);
         };
 
         window.addEventListener('scroll', handleScroll);
@@ -113,10 +109,15 @@ const NavbarPage = () => {
     }, []);
 
     // Detect login status from cookie
+    // Detect login status from cookie
     useEffect(() => {
-        const loggedIn = Cookies.get('user_logged_in') === 'true';
+        const loggedIn = Cookies.get('isSignedIn') === 'true';
         setIsLoggedIn(loggedIn);
+
+        // Log the user's sign-in status
+        console.log(`User is ${loggedIn ? 'signed in' : 'not signed in'}`);
     }, []);
+
 
     return (
         <div style={styles.pageWrapper}>
@@ -128,73 +129,72 @@ const NavbarPage = () => {
                             summa
                         </a>
 
-                        <div style={styles.navLinks}>
-                            <a href="#platform" style={styles.navLink}>Platform</a>
-                            <a href="#solutions" style={styles.navLink}>Solutions</a>
-                            <a href="#research" style={styles.navLink}>Research</a>
-                            <a href="#resources" style={styles.navLink}>Resources</a>
-                            <a href="#company" style={styles.navLink}>Company</a>
-                        </div>
+                        {isLoggedIn ? (
+                            // Display everything when logged in
+                            <>
+                                <div style={styles.navLinks}>
+                                    <a href="#platform" style={styles.navLink}>Platform</a>
+                                    <a href="#solutions" style={styles.navLink}>Solutions</a>
+                                    <a href="#research" style={styles.navLink}>Research</a>
+                                    <a href="#resources" style={styles.navLink}>Resources</a>
+                                    <a href="#company" style={styles.navLink}>Company</a>
+                                </div>
 
-                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            <a
-                                href="/chat"
-                                style={{
-                                    ...styles.specialNavLink,
-                                    ...(hoveredLink === 'chat' ? styles.specialNavLinkHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredLink('chat')}
-                                onMouseLeave={() => setHoveredLink(null)}
-                            >
-                                Chat
-                            </a>
-
-                            <a
-                                href="/investors"
-                                style={{
-                                    ...styles.specialNavLink,
-                                    ...(hoveredLink === 'database' ? styles.specialNavLinkHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredLink('database')}
-                                onMouseLeave={() => setHoveredLink(null)}
-                            >
-                                Database
-                            </a>
-
-                            {isLoggedIn ? (
-                                <button
-                                    onClick={() => {
-                                        Cookies.remove('user_logged_in');
-                                        localStorage.removeItem('startupSignupData');
-                                        localStorage.removeItem('vcMatcherResults');
-                                        localStorage.removeItem('hasCalledVcMatcherApi');
-                                        window.location.href = "/";
-                                    }}
-                                    style={styles.primaryButton}
-                                >
-                                    Logout
-                                </button>
-                            ) : (
-                                <>
+                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                                     <a
-                                        href="/signup"
+                                        href="/chat"
                                         style={{
                                             ...styles.specialNavLink,
-                                            ...(hoveredLink === 'signup' ? styles.specialNavLinkHover : {})
+                                            ...(hoveredLink === 'chat' ? styles.specialNavLinkHover : {})
                                         }}
-                                        onMouseEnter={() => setHoveredLink('signup')}
+                                        onMouseEnter={() => setHoveredLink('chat')}
                                         onMouseLeave={() => setHoveredLink(null)}
                                     >
-                                        Sign up
+                                        Chat
                                     </a>
-                                    <a href="#demo">
-                                        <button style={styles.primaryButton}>
-                                            Request a demo
-                                        </button>
+
+                                    <a
+                                        href="/investors"
+                                        style={{
+                                            ...styles.specialNavLink,
+                                            ...(hoveredLink === 'database' ? styles.specialNavLinkHover : {})
+                                        }}
+                                        onMouseEnter={() => setHoveredLink('database')}
+                                        onMouseLeave={() => setHoveredLink(null)}
+                                    >
+                                        Database
                                     </a>
-                                </>
-                            )}
-                        </div>
+
+                                    <button
+                                        onClick={() => {
+                                            Cookies.remove('user_logged_in');
+                                            localStorage.removeItem('startupSignupData');
+                                            localStorage.removeItem('vcMatcherResults');
+                                            localStorage.removeItem('hasCalledVcMatcherApi');
+                                            window.location.href = "/";
+                                        }}
+                                        style={styles.primaryButton}
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            // Display only the "Sign up" button when not logged in
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                <a
+                                    href="/signup"
+                                    style={{
+                                        ...styles.specialNavLink,
+                                        ...(hoveredLink === 'signup' ? styles.specialNavLinkHover : {})
+                                    }}
+                                    onMouseEnter={() => setHoveredLink('signup')}
+                                    onMouseLeave={() => setHoveredLink(null)}
+                                >
+                                    Sign up
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
             </nav>
