@@ -112,8 +112,6 @@ const NavbarPage = () => {
     useEffect(() => {
         const loggedIn = Cookies.get('isSignedIn') === 'true';
         setIsLoggedIn(loggedIn);
-
-        // Log the user's sign-in status
         console.log(`User is ${loggedIn ? 'signed in' : 'not signed in'}`);
     }, []);
 
@@ -163,7 +161,7 @@ const NavbarPage = () => {
                                         Matches
                                     </a>
 
-                                    {/* NEW: Profile link => jump to step=4 in signup to see final profile */}
+                                    {/* 'Profile' link is visible only if isSignedIn == true */}
                                     <a
                                         href="/signup?step=4"
                                         style={{
@@ -178,8 +176,9 @@ const NavbarPage = () => {
 
                                     <button
                                         onClick={() => {
-                                            Cookies.remove('user_logged_in');
+                                            Cookies.remove('isSignedIn');
                                             localStorage.removeItem('startupSignupData');
+                                            localStorage.removeItem('startupSignupCompleted');
                                             localStorage.removeItem('vcMatcherResults');
                                             localStorage.removeItem('hasCalledVcMatcherApi');
                                             window.location.href = "/";
