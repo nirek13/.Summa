@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import { Link } from 'react-router-dom';  // <-- import Link
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './InvestorDatabase.css';
 
 const InvestorDatabase = () => {
@@ -16,8 +16,9 @@ const InvestorDatabase = () => {
   const [error, setError] = useState(null);
   const [sortAlphabetically, setSortAlphabetically] = useState(false);
 
-  // Fetch CSV from public/data/investors_cleaned.csv on mount
-  useEffect(() => {
+  // Function to fetch investor data
+  const fetchInvestorData = () => {
+    setIsLoading(true);
     fetch('/data/investors_cleaned.csv')
       .then((response) => response.text())
       .then((csvText) => {
@@ -25,8 +26,15 @@ const InvestorDatabase = () => {
           header: true,
           skipEmptyLines: true,
         });
-        setInvestors(parsedData.data);
-        setFilteredInvestors(parsedData.data);
+        // Assume data is already ranked in the array
+        const rankedData = parsedData.data.map((investor, index) => ({
+          ...investor,
+          rank: index + 1,
+          // Set a default compatibility score between 0.1 and 1
+          compatibility_score: investor.compatibility_score
+        }));
+        setInvestors(rankedData);
+        setFilteredInvestors(rankedData);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -34,6 +42,11 @@ const InvestorDatabase = () => {
         setError('Failed to load investor data. Please try again later.');
         setIsLoading(false);
       });
+  };
+
+  // Fetch CSV from public/data/investors_cleaned.csv on mount
+  useEffect(() => {
+    fetchInvestorData();
   }, []);
 
   // Extract unique values for filters
@@ -92,7 +105,7 @@ const InvestorDatabase = () => {
       if (searchTerm) {
         results = results.filter((investor) =>
           Object.values(investor).some((value) =>
-            value.toLowerCase().includes(searchTerm.toLowerCase())
+            String(value).toLowerCase().includes(searchTerm.toLowerCase())
           )
         );
       }
@@ -241,6 +254,19 @@ const InvestorDatabase = () => {
     return 'Investor';
   };
 
+  // Format compatibility score as a percentage
+  const formatCompatibilityScore = (score) => {
+    if (score === undefined || score === null || isNaN(score)) {
+      return '0% Compatibility';
+    }
+    return `${Math.round(score * 100)}% Compatibility`;
+  };
+
+  // Handle API refresh
+  const handleRefresh = () => {
+    fetchInvestorData();
+  };
+
   if (error) {
     return (
       <div className="error-container">
@@ -255,8 +281,10 @@ const InvestorDatabase = () => {
     <div className="app-container">
       {/* Header */}
       <header className="header">
-        <h1>Investor Explorer</h1>
-        <p>Find the perfect investors for your startup</p>
+        <div className="header-content centered">
+          <h1>Discover the Top VCs Ready to Back Your Vision</h1>
+          <p>Find the perfect investors for your startup</p>
+        </div>
       </header>
 
       {/* Search and Filters */}
@@ -347,6 +375,25 @@ const InvestorDatabase = () => {
               ))}
             </select>
           </div>
+
+          <button onClick={handleRefresh} className="reanalyze-button">
+            <svg 
+              className="refresh-icon" 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+              <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+            </svg>
+            Reanalyze matches
+          </button>
         </div>
 
         <div className="sort-toggle">
@@ -371,12 +418,12 @@ const InvestorDatabase = () => {
         </div>
       </div>
 
-      {/* Results */}
-      <div className="card-grid">
+      {/* Results - ONE PER ROW */}
+      <div className="investor-list">
         {isLoading ? (
           // Loading skeleton
           [...Array(6)].map((_, i) => (
-            <div key={i} className="skeleton-card">
+            <div key={i} className="skeleton-card skeleton-row">
               <div className="skeleton-title"></div>
               <div className="skeleton-subtitle"></div>
               <div className="skeleton-text"></div>
@@ -391,6 +438,7 @@ const InvestorDatabase = () => {
           filteredInvestors.map((investor, index) => {
             const investorType = getInvestorType(investor['Investor Name']);
             const cleanName = cleanInvestorName(investor['Investor Name']);
+            const totalCount = 250; // Fixed total count as requested
 
             // Prepare data for the query params
             const encodedName = encodeURIComponent(cleanName);
@@ -401,84 +449,95 @@ const InvestorDatabase = () => {
             const encodedStages = encodeURIComponent(investor.Stages || '');
 
             return (
-              <div key={index} className="investor-card">
-                <div className="card-content">
-                  <div className="card-header">
-                    <h2>{cleanName}</h2>
-                    <span className="investor-type">{investorType}</span>
-                    {sortAlphabetically && investor.rank && (
-                      <div className="rank-badge">
-                        #{investor.rank}/{investor.totalCount}
-                      </div>
-                    )}
+              <div key={index} className="investor-row">
+                <div className="row-content">
+                  <div className="row-left">
+                    {/* Ranking display with numerator bigger than denominator */}
+                    <div className="rank-display">
+                      <span className="rank-numerator">{investor.rank || index + 1}</span>
+                    </div>
                   </div>
+                  
+                  <div className="row-main">
+                    <div className="row-header">
+                      <h2>{cleanName}</h2>
+                      <span className="investor-type">{investorType}</span>
+                      
+                      {/* Compatibility score as a green tag */}
+                      <span className="compatibility-tag">
+                        {formatCompatibilityScore(investor.compatibility_score)}
+                      </span>
+                    </div>
 
-                  <div className="region-tags">
-                    {investor.Geography.split(' ')
-                      .filter((g) => !g.includes('+'))
-                      .map((regionItem, i2) => (
-                        <span key={i2} className="region-tag">
-                          {regionItem}
-                        </span>
-                      ))}
-                    {investor.Geography.split(' ').find((g) => g.includes('+')) && (
-                      <span className="region-tag">+more</span>
-                    )}
-                  </div>
-
-                  <div className="thesis">
-                    <p className="field-label">Investment Thesis</p>
-                    <p className="thesis-text">
-                      {investor['Investment Thesis']}
-                    </p>
-                  </div>
-
-                  <div className="check-size">
-                    <p className="field-label">Check Size</p>
-                    <p className="field-value">{investor['Check Size']}</p>
-                  </div>
-
-                  <div className="stage-tags">
-                    {investor.Stages.split(' ')
-                      .filter((s) => s.match(/\d\./))
-                      .map((stage, i3) => {
-                        const stageMap = {
-                          '1.': 'Idea/Patent',
-                          '2.': 'Prototype',
-                          '3.': 'Early Revenue',
-                          '4.': 'Scaling',
-                        };
-                        const stageNum = stage.trim().replace(',', '');
-                        return (
-                          <span key={i3} className="stage-tag">
-                            {stageMap[stageNum] || stageNum}
+                    <div className="region-tags">
+                      {investor.Geography.split(' ')
+                        .filter((g) => !g.includes('+'))
+                        .map((regionItem, i2) => (
+                          <span key={i2} className="region-tag">
+                            {regionItem}
                           </span>
-                        );
-                      })}
+                        ))}
+                      {investor.Geography.split(' ').find((g) => g.includes('+')) && (
+                        <span className="region-tag">+more</span>
+                      )}
+                    </div>
+
+                    <div className="thesis">
+                      <p className="field-label">Investment Thesis</p>
+                      <p className="thesis-text">
+                        {investor['Investment Thesis']}
+                      </p>
+                    </div>
+
+                    <div className="row-details">
+                      <div className="check-size">
+                        <p className="field-label">Check Size</p>
+                        <p className="field-value">{investor['Check Size']}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="stage-container">
+                      <div className="stage-tags-wrapper">
+                        {investor.Stages.split(' ')
+                          .filter((s) => s.match(/\d\./))
+                          .map((stage, i3) => {
+                            const stageMap = {
+                              '1.': 'Idea/Patent',
+                              '2.': 'Prototype',
+                              '3.': 'Early Revenue',
+                              '4.': 'Scaling',
+                            };
+                            const stageNum = stage.trim().replace(',', '');
+                            return (
+                              <span key={i3} className="stage-tag">
+                                {stageMap[stageNum] || stageNum}
+                              </span>
+                            );
+                          })}
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Card footer pinned at the bottom */}
-                <div className="card-footer">
-                  <a
-                    href={`mailto:${investor['Fake Email']}`}
-                    className="contact-button"
-                  >
-                    Contact
-                  </a>
+                  <div className="row-actions">
+                    <a
+                      href={`mailto:${investor['Fake Email']}`}
+                      className="contact-button"
+                    >
+                      Contact
+                    </a>
 
-                  {/* NEW Summarize with Gemini Button */}
-                  <Link
-                    to={`/chat?name=${encodedName}
-                          &type=${encodedType}
-                          &thesis=${encodedThesis}
-                          &checkSize=${encodedCheckSize}
-                          &geography=${encodedGeography}
-                          &stages=${encodedStages}`}
-                    className="gemini-summarize-button"
-                  >
-                    Summarize with Gemini
-                  </Link>
+                    <Link
+                      to={`/chat?name=${encodedName}
+                            &type=${encodedType}
+                            &thesis=${encodedThesis}
+                            &checkSize=${encodedCheckSize}
+                            &geography=${encodedGeography}
+                            &stages=${encodedStages}`}
+                      className="gemini-summarize-button"
+                    >
+                      Summarize with Gemini
+                    </Link>
+                  </div>
                 </div>
               </div>
             );
@@ -506,6 +565,214 @@ const InvestorDatabase = () => {
           </div>
         )}
       </div>
+
+      {/* Add this CSS to your InvestorDatabase.css file */}
+      <style jsx>{`
+        .header-content.centered {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 6px;
+        }
+
+        /* New row-based layout */
+        .investor-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .investor-row {
+          display: flex;
+          width: 100%;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .investor-row:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .row-content {
+          display: flex;
+          width: 100%;
+          padding: 20px;
+        }
+
+        .row-left {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          min-width: 80px;
+          margin-right: 20px;
+        }
+
+        .row-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .row-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          justify-content: center;
+          min-width: 160px;
+          margin-left: 20px;
+        }
+
+        /* Ranking display with offsets */
+        .rank-display {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          padding-top: 10px;
+        }
+
+        .rank-numerator {
+          font-size: 32px;
+          color: #2563eb;
+          font-weight: 700;
+          position: relative;
+          left: -6px; /* Offset to the left */
+        }
+
+        /* Compatibility tag */
+        .compatibility-tag {
+          display: inline-block;
+          background-color: #10b981;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 16px;
+          font-size: 14px;
+          font-weight: 600;
+          margin-left: 10px;
+        }
+
+        /* Row header */
+        .row-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .row-header h2 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+          margin-right: 10px; /* added margin between name and investor type */
+        }
+
+        .row-details {
+          display: flex;
+          gap: 20px;
+          margin-top: 10px;
+        }
+
+        /* Stage tags improvements */
+        .stage-container {
+          margin-top: 12px;
+        }
+
+        .stage-tags-wrapper {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 4px;
+        }
+
+        .stage-tag {
+          display: inline-block;
+          background-color: #dbeafe;
+          color: #1e40af;
+          font-size: 13px;
+          padding: 4px 12px;
+          border-radius: 4px;
+          font-weight: 500;
+          height: auto;
+        }
+
+        /* Field labels */
+        .field-label {
+          font-size: 14px;
+          font-weight: 600;
+          color: #4b5563;
+          margin: 0 0 4px 0;
+        }
+
+        /* Modify skeleton for row layout */
+        .skeleton-row {
+          width: 100%;
+          height: 180px;
+          padding: 20px;
+        }
+
+        /* Reanalyze button styling */
+        .reanalyze-button {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background-color: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          margin-left: auto;
+        }
+
+        .reanalyze-button:hover {
+          background-color: #1d4ed8;
+        }
+
+        .refresh-icon {
+          width: 14px;
+          height: 14px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+          .row-content {
+            flex-direction: column;
+          }
+
+          .row-left {
+            flex-direction: row;
+            justify-content: flex-start;
+            margin-right: 0;
+            margin-bottom: 15px;
+          }
+
+          .rank-display {
+            flex-direction: row;
+            align-items: baseline;
+            padding-top: 0;
+          }
+
+          .rank-numerator {
+            margin-right: 5px;
+            left: 0;
+          }
+
+          .row-actions {
+            flex-direction: row;
+            margin-left: 0;
+            margin-top: 15px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
