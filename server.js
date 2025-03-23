@@ -36,11 +36,11 @@ app.post('/api/chat', async (req, res) => {
     
     // Build the prompt with the full conversation context
     let prompt = `
-You are an AI assistant that provides clean, professional summaries and follow-up answers regarding venture capital firms and angel investors.
-The conversation so far:
-${conversationHistory}
+    You are an AI assistant that provides clean, professional summaries and follow-up answers regarding venture capital firms and angel investors.
+    The conversation so far:
+    ${conversationHistory}
 
-User: ${message}
+    User: ${message}
     `;
     if (attachments.length > 0) {
       const attachmentNames = attachments.map(a => a.name).join(', ');
@@ -59,32 +59,6 @@ User: ${message}
     console.error("Error calling Gemini API:", error);
     return res.status(500).json({
       text: "Sorry, there was an error processing your request. Please try again later."
-    });
-  }
-});
-
-// -------------------------------------------------------
-// /api/deepresearch endpoint for detailed research queries
-// -------------------------------------------------------
-app.post('/api/deepresearch', async (req, res) => {
-  try {
-    const { query = '' } = req.body;
-    const deepResearchPrompt = `
-You are an expert research assistant. Perform deep, detailed research on the topic below.
-Include thorough analysis, key insights, and supporting data or bullet points where applicable.
-
-Topic: ${query}
-
-Provide your analysis in plain text.
-    `.trim();
-
-    const result = await model.generateContent(deepResearchPrompt);
-    const researchReply = result?.response?.text() ?? "No response from Gemini.";
-    return res.json({ text: researchReply });
-  } catch (error) {
-    console.error("Error during deep research:", error);
-    return res.status(500).json({
-      text: "Deep research failed. Please try again."
     });
   }
 });

@@ -318,8 +318,12 @@ const MinimalistChatbot = () => {
   // Function for auto-summarize via /api/chat (without conversation history)
   const autoSummarize = async (name, type, thesis, checkSize, geography, stages) => {
     const summaryPrompt = `
-Please provide a concise summary of this investor. Include notable portfolio companies, typical founder profiles, average check sizes,
-and any unique aspects a startup founder should know.
+  Please provide a concise summary of this investor: ${investorName}. Include notable portfolio companies, typical founder profiles, average check sizes,
+  and any unique aspects a startup founder should know. You are to act as a helpful assistant answering any questions related to: ${investorName}. Do NOT notify
+  the user of any information that is missing, but could be helpful. Instead, ignore it.
+
+  For additional info, here is the user's data: ${JSON.stringify(localStorage.getItem('startupSignupData'))}. You are to use this to answer questions about
+  synergies between the startup and VCs, and use it to enhance other answers by tying it to the user's stats somewhat frequently.
 
 Name: ${decodeURIComponent(name)}
 Type: ${decodeURIComponent(type)}
