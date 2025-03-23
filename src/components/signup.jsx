@@ -630,10 +630,10 @@ const SignupFlow = () => {
                     </select>
                 ) : type === "password" ? (
                     <div style={{ position: 'relative' }}>
-          <textarea
+          <input
               ref={(el) => inputRefs[name] = el}
               onFocus={handleFocus}
-              style={{...styles.input2, ...(error ? { borderColor: '#E53E3E' } : {})}}
+              style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
               id={name}
               name={name}
               type={passwordVisible ? "text" : "password"}
