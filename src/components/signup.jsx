@@ -1,7 +1,8 @@
+import Cookies from 'js-cookie';
 import { ArrowRight, BarChart2, Briefcase, Building, DollarSign, Edit, FileText, Lock, Mail, MapPin, Target, User, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-// CSS styles without Tailwind
+// CSS styles
 const styles = {
     container: {
         backgroundColor: '#FAFBFD',
@@ -10,23 +11,24 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px'
+        padding: '20px',
+        fontSize: '14px'
     },
     formContainer: {
         width: '100%',
-        maxWidth: '640px',
+        maxWidth: '540px',
         backgroundColor: '#FAFBFD',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(50, 50, 50, 0.1)',
-        padding: '32px',
+        borderRadius: '10px',
+        boxShadow: '0 3px 10px rgba(50, 50, 50, 0.1)',
+        padding: '28px',
         position: 'relative',
         zIndex: 10
     },
     progressContainer: {
-        marginBottom: '32px'
+        marginBottom: '24px'
     },
     progressBar: {
-        height: '8px',
+        height: '6px',
         width: '100%',
         backgroundColor: '#B6C2CE',
         borderRadius: '9999px',
@@ -40,104 +42,90 @@ const styles = {
     progressLabels: {
         display: 'flex',
         justifyContent: 'space-between',
-        marginTop: '8px',
-        fontSize: '12px',
+        marginTop: '6px',
+        fontSize: '11px',
         color: '#688990'
     },
     formSection: {
-        marginBottom: '24px'
+        marginBottom: '20px'
     },
     header: {
         textAlign: 'center',
-        marginBottom: '32px'
+        marginBottom: '28px'
     },
     title: {
-        fontSize: '28px',
+        fontSize: '24px',
         fontWeight: 'bold',
         color: '#323232',
-        marginBottom: '8px'
+        marginBottom: '6px'
     },
     subtitle: {
-        fontSize: '16px',
+        fontSize: '14px',
         color: '#688990',
-        marginTop: '8px'
+        marginTop: '6px'
     },
     formRow: {
-        marginBottom: '24px'
+        marginBottom: '20px'
     },
     label: {
         display: 'block',
         color: '#323232',
-        fontSize: '14px',
+        fontSize: '13px',
         fontWeight: '500',
-        marginBottom: '8px'
+        marginBottom: '6px'
     },
     labelWithIcon: {
         display: 'flex',
         alignItems: 'center'
     },
     icon: {
-        width: '20px',
-        height: '20px',
-        marginRight: '8px',
+        width: '18px',
+        height: '18px',
+        marginRight: '6px',
         color: '#4D766E'
     },
     input: {
         width: '100%',
-        padding: '12px',
+        padding: '10px',
         backgroundColor: '#FAFBFD',
         border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        fontSize: '16px',
-        outline: 'none',
-        transition: 'all 0.2s ease'
-    },
-    inputFocus: {
-        borderColor: '#4D766E',
-        boxShadow: '0 0 0 2px rgba(77, 118, 110, 0.25)'
-    },
-    select: {
-        width: '100%',
-        padding: '12px',
-        backgroundColor: '#FAFBFD',
-        border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        fontSize: '16px',
+        borderRadius: '6px',
+        fontSize: '14px',
         outline: 'none',
         transition: 'all 0.2s ease'
     },
     textarea: {
         width: '100%',
-        padding: '12px',
+        padding: '10px',
         backgroundColor: '#FAFBFD',
         border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        fontSize: '16px',
-        minHeight: '80px', // shortened default height
+        borderRadius: '6px',
+        fontSize: '14px',
+        minHeight: '80px',
         outline: 'none',
         transition: 'all 0.2s ease',
         resize: 'vertical'
     },
     helpText: {
-        fontSize: '12px',
+        fontSize: '11px',
         color: '#688990',
-        marginTop: '4px'
+        marginTop: '3px'
     },
     errorText: {
-        fontSize: '12px',
+        fontSize: '11px',
         color: '#E53E3E',
-        marginTop: '4px'
+        marginTop: '3px'
     },
     buttonContainer: {
         display: 'flex',
         justifyContent: 'space-between',
-        marginTop: '32px'
+        marginTop: '24px'
     },
     button: {
-        padding: '12px 24px',
-        borderRadius: '8px',
+        padding: '10px 20px',
+        borderRadius: '6px',
         fontWeight: '500',
-        fontSize: '16px',
+        fontSize: '14px',
         cursor: 'pointer',
         transition: 'all 0.2s ease'
     },
@@ -148,28 +136,22 @@ const styles = {
         display: 'flex',
         alignItems: 'center'
     },
-    primaryButtonHover: {
-        backgroundColor: '#323232'
-    },
     secondaryButton: {
         backgroundColor: '#FAFBFD',
         color: '#323232',
         border: '1px solid #B6C2CE'
     },
-    secondaryButtonHover: {
-        backgroundColor: '#B6C2CE'
-    },
     buttonIcon: {
-        marginLeft: '8px',
-        width: '16px',
-        height: '16px'
+        marginLeft: '6px',
+        width: '14px',
+        height: '14px'
     },
     infoCard: {
-        padding: '16px',
+        padding: '12px',
         backgroundColor: '#F0F4F5',
         border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        marginBottom: '24px'
+        borderRadius: '6px',
+        marginBottom: '20px'
     },
     infoCardHeader: {
         display: 'flex',
@@ -181,95 +163,24 @@ const styles = {
         marginBottom: '4px'
     },
     infoCardText: {
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#688990'
-    },
-    listContainer: {
-        marginTop: '8px',
-        marginLeft: '24px'
-    },
-    listItem: {
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: '4px',
-        fontSize: '14px',
-        color: '#688990'
-    },
-    listDot: {
-        width: '6px',
-        height: '6px',
-        backgroundColor: '#4D766E',
-        borderRadius: '50%',
-        marginRight: '8px'
-    },
-    flexRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px'
-    },
-    flexColumn: {
-        display: 'flex',
-        flexDirection: 'column'
-    },
-    flexGrow: {
-        flexGrow: 1
-    },
-    successIcon: {
-        width: '64px',
-        height: '64px',
-        backgroundColor: '#F0F4F5',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto',
-        marginBottom: '24px'
-    },
-    successIconInner: {
-        width: '32px',
-        height: '32px',
-        color: '#4D766E'
-    },
-    nextStepsCard: {
-        backgroundColor: '#FAFBFD',
-        border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        padding: '24px',
-        maxWidth: '480px',
-        margin: '0 auto',
-        marginBottom: '32px'
-    },
-    nextStepsList: {
-        textAlign: 'left',
-        color: '#323232',
-        margin: '0',
-        padding: '0',
-        listStyleType: 'none'
-    },
-    nextStepsItem: {
-        display: 'flex',
-        marginBottom: '12px'
-    },
-    nextStepsNumber: {
-        fontWeight: '500',
-        color: '#4D766E',
-        marginRight: '8px'
     },
     profileSummary: {
         backgroundColor: '#F0F4F5',
         border: '1px solid #B6C2CE',
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '24px'
+        borderRadius: '6px',
+        padding: '12px',
+        marginBottom: '20px'
     },
     profileSection: {
-        marginBottom: '16px'
+        marginBottom: '14px'
     },
     profileSectionTitle: {
-        fontSize: '16px',
+        fontSize: '14px',
         fontWeight: '500',
         color: '#4D766E',
-        marginBottom: '8px',
+        marginBottom: '6px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between'
@@ -279,14 +190,14 @@ const styles = {
         marginBottom: '4px'
     },
     profileLabel: {
-        width: '140px',
-        fontSize: '14px',
+        width: '120px',
+        fontSize: '13px',
         color: '#688990',
         fontWeight: '500'
     },
     profileValue: {
         flex: '1',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#323232'
     },
     editButton: {
@@ -296,24 +207,24 @@ const styles = {
         border: 'none',
         color: '#4D766E',
         cursor: 'pointer',
-        padding: '4px',
+        padding: '3px',
         borderRadius: '4px',
-        fontSize: '14px'
+        fontSize: '13px'
     },
     editIcon: {
-        width: '16px',
-        height: '16px',
-        marginRight: '4px'
+        width: '14px',
+        height: '14px',
+        marginRight: '3px'
     },
     tabContainer: {
         display: 'flex',
         borderBottom: '1px solid #B6C2CE',
-        marginBottom: '24px'
+        marginBottom: '16px'
     },
     tab: {
-        padding: '12px 24px',
+        padding: '10px 16px',
         cursor: 'pointer',
-        fontSize: '16px',
+        fontSize: '14px',
         fontWeight: '500',
         color: '#688990',
         borderBottom: '2px solid transparent'
@@ -323,15 +234,15 @@ const styles = {
         borderBottom: '2px solid #4D766E'
     },
     checkbox: {
-        marginRight: '8px'
+        marginRight: '6px'
     },
     checkboxContainer: {
         display: 'flex',
         alignItems: 'center',
-        marginBottom: '16px'
+        marginBottom: '14px'
     },
     checkboxLabel: {
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#323232'
     },
     linkText: {
@@ -340,54 +251,47 @@ const styles = {
         cursor: 'pointer'
     },
     passwordRequirements: {
-        marginTop: '12px',
-        padding: '12px',
+        marginTop: '10px',
+        padding: '10px',
         backgroundColor: '#F0F4F5',
-        borderRadius: '8px'
+        borderRadius: '6px'
     },
     passwordRequirementItem: {
         display: 'flex',
         alignItems: 'center',
         fontSize: '12px',
         color: '#688990',
-        marginBottom: '4px'
+        marginBottom: '3px'
     },
     requirementMet: {
         color: '#4D766E'
+    },
+    flexRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
     }
 };
 
 const SignupFlow = () => {
-    // Steps:
-    // 0 => Credentials
-    // 1 => Startup Details
-    // 2 => Additional Info
-    // 3 => Check Size
-    // 4 => Profile
-    // "completed" => show CompletionView
-
-    const [step, setStep] = useState(0); // start with credentials
+    // Steps: 0..3 => final step => 4 => Profile
+    const [step, setStep] = useState(0);
     const [formData, setFormData] = useState({
-        // Credentials
         fullName: '',
         email: '',
         password: '',
         companyName: '',
-        // Startup
         industry: '',
         stage: '',
         businessModel: '',
         location: '',
-        // Additional Info
         traction: '',
         teamExperience: '',
         pitchSummary: '',
-        // Check Size
         checkSizeMin: '',
         checkSizeMax: '',
     });
     const [errors, setErrors] = useState({});
-    const [completed, setCompleted] = useState(false);
     const [editMode, setEditMode] = useState({
         credentials: false,
         startup: false,
@@ -398,7 +302,7 @@ const SignupFlow = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
 
-    // Password requirements check
+    // track password requirements
     const [passwordRequirements, setPasswordRequirements] = useState({
         length: false,
         uppercase: false,
@@ -407,45 +311,48 @@ const SignupFlow = () => {
         special: false
     });
 
-    // For focusing inputs on re-renders
+    // input focusing
     const [focusedInput, setFocusedInput] = useState(null);
     const inputRefs = {};
 
-    // If user is already logged in, you could do a check here:
-    // const isLoggedIn = Cookies.get('isSignedIn') === 'true';
-
-    // Check for ?step=4 in the URL => user clicked "Profile"
+    // -----------------------------------------
+    //  useEffect: check ?step= param
+    // -----------------------------------------
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const possibleStep = parseInt(params.get('step'), 10);
-        // If it's a valid step, jump there
         if (!isNaN(possibleStep)) {
             setStep(possibleStep);
         }
     }, []);
 
-    // Load data from localStorage on component mount
+    // -----------------------------------------
+    //  useEffect: load from localStorage on mount
+    // -----------------------------------------
     useEffect(() => {
         const savedData = localStorage.getItem('startupSignupData');
         if (savedData) {
+            console.log("load from localstore (on mount): ", JSON.parse(savedData));
             setFormData(JSON.parse(savedData));
-            // Check if form was previously completed
-            const wasCompleted = localStorage.getItem('startupSignupCompleted');
-            if (wasCompleted === 'true') {
-                setCompleted(true);
-            }
         }
     }, []);
 
-    // Save data to localStorage whenever formData changes
+    // -----------------------------------------
+    //  Reload data from localStorage if user hits step=4 => profile
+    // -----------------------------------------
     useEffect(() => {
-        localStorage.setItem('startupSignupData', JSON.stringify(formData));
-        if (completed) {
-            localStorage.setItem('startupSignupCompleted', 'true');
+        if (step === 4) {
+            const savedData = localStorage.getItem('startupSignupData');
+            if (savedData) {
+                console.log("load from localstore (step=4): ", JSON.parse(savedData));
+                setFormData(JSON.parse(savedData));
+            }
         }
-    }, [formData, completed]);
+    }, [step]);
 
-    // Check password requirements
+    // -----------------------------------------
+    //  Check password requirements on changes
+    // -----------------------------------------
     useEffect(() => {
         const password = formData.password;
         setPasswordRequirements({
@@ -457,17 +364,19 @@ const SignupFlow = () => {
         });
     }, [formData.password]);
 
-    // Restore focus after changes
+    // restore focus
     useEffect(() => {
         if (focusedInput && inputRefs[focusedInput]) {
             inputRefs[focusedInput].focus();
         }
     }, [formData, errors, focusedInput]);
 
+    // handleFocus
     const handleFocus = (e) => {
         setFocusedInput(e.target.name);
     };
 
+    // handleChange
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -476,6 +385,13 @@ const SignupFlow = () => {
         }
     };
 
+    // function to Save data to localStorage => call once final step is clicked
+    const saveFormDataToLocalStorage = () => {
+        console.log("Saving final form data => localStorage: ", formData);
+        localStorage.setItem('startupSignupData', JSON.stringify(formData));
+    };
+
+    // validate step=0
     const validateCredentials = () => {
         const newErrors = {};
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -505,38 +421,43 @@ const SignupFlow = () => {
         if (!agreedToTerms) {
             newErrors.terms = 'You must agree to the terms and conditions';
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Steps are now 5 total: 0..4 => last is "Profile"  
+    // nextStep
     const nextStep = () => {
         if (step === 0) {
+            // validate credentials
             if (!validateCredentials()) return;
         }
-        // If user is at "Check Size" step (step=3) => next means go to "Profile" (step=4)
+
+        // if step=3 => final step => set isSignedIn => step=4 => only then save to localStorage
         if (step === 3) {
-            setCompleted(true);
+            Cookies.set('isSignedIn','true');
+            // Save form data to localStorage once user completes
+            saveFormDataToLocalStorage();
             setStep(4);
-        } else if (step < 4) {
-            // If in edit mode, mark that section as done
-            if (Object.values(editMode).some(val => val)) {
-                switch(step) {
-                    case 0: setEditMode(prev => ({ ...prev, credentials: false })); break;
-                    case 1: setEditMode(prev => ({ ...prev, startup: false })); break;
-                    case 2: setEditMode(prev => ({ ...prev, additional: false })); break;
-                    case 3: setEditMode(prev => ({ ...prev, checkSize: false })); break;
-                    default: break;
-                }
-            }
-            setStep(step + 1);
+            return;
         }
+
+        // if in edit mode => mark that section as done
+        if (Object.values(editMode).some(val => val)) {
+            switch(step) {
+                case 0: setEditMode(prev => ({ ...prev, credentials: false })); break;
+                case 1: setEditMode(prev => ({ ...prev, startup: false })); break;
+                case 2: setEditMode(prev => ({ ...prev, additional: false })); break;
+                case 3: setEditMode(prev => ({ ...prev, checkSize: false })); break;
+                default: break;
+            }
+        }
+        setStep(step + 1);
     };
 
+    // prevStep
     const prevStep = () => {
+        // if user is editing credentials & is at step=0 => go back to step=4
         if (Object.values(editMode).some(val => val) && step === 0) {
-            // If in edit mode and at credentials step, cancel edit and go to profile
             setEditMode({ credentials: false, startup: false, additional: false, checkSize: false });
             setStep(4);
         } else if (step > 0) {
@@ -544,6 +465,7 @@ const SignupFlow = () => {
         }
     };
 
+    // startEditing => sets the step accordingly
     const startEditing = (section) => {
         setEditMode(prev => ({ ...prev, [section]: true }));
         switch(section) {
@@ -555,13 +477,14 @@ const SignupFlow = () => {
         }
     };
 
+    // saveChanges => user done editing => go back to step=4
     const saveChanges = (section) => {
         setEditMode(prev => ({ ...prev, [section]: false }));
-        // Return to profile step
-        setStep(4);
+        saveFormDataToLocalStorage()
+        setStep(4); 
     };
 
-    // InputWithIcon component
+    // Reusable input with icon
     const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, required = false, error }) => {
         const Icon = icon;
 
@@ -576,7 +499,10 @@ const SignupFlow = () => {
                 <label style={styles.label} htmlFor={name}>
                     <div style={styles.labelWithIcon}>
                         <Icon style={styles.icon} />
-                        <span>{label}{required && <span style={{ color: '#E53E3E' }}> *</span>}</span>
+                        <span>
+                            {label}
+                            {required && <span style={{ color: '#E53E3E' }}> *</span>}
+                        </span>
                     </div>
                 </label>
 
@@ -584,7 +510,7 @@ const SignupFlow = () => {
                     <select
                         ref={el => inputRefs[name] = el}
                         onFocus={handleFocus}
-                        style={{...styles.select, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                        style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
                         value={value}
@@ -646,7 +572,7 @@ const SignupFlow = () => {
         );
     };
 
-    // Options
+    // the industry, stage, businessModel arrays
     const industryOptions = [
         { value: 'fintech', label: 'Fintech' },
         { value: 'healthtech', label: 'Healthtech' },
@@ -678,27 +604,25 @@ const SignupFlow = () => {
         { value: 'subscription', label: 'Subscription' }
     ];
 
+    // helper to map value => label
     const getLabelFromValue = (options, value) => {
         const option = options.find(opt => opt.value === value);
         return option ? option.label : value;
     };
 
-    // Progress bar: 5 steps total now
+    // progress indicator for steps
     const ProgressIndicator = () => {
-        const totalSteps = 5; // 0..4 => last is profile
+        const totalSteps = 5; // steps 0..4
         const progress = ((step + 1) / totalSteps) * 100;
-
         return (
             <div style={styles.progressContainer}>
                 <div style={styles.progressBar}>
-                    <div
-                        style={{...styles.progressIndicator, width: `${progress}%`}}
-                    ></div>
+                    <div style={{...styles.progressIndicator, width: `${progress}%`}} />
                 </div>
                 <div style={styles.progressLabels}>
                     <span>Credentials</span>
-                    <span>Startup Details</span>
-                    <span>Additional Info</span>
+                    <span>Startup</span>
+                    <span>Additional</span>
                     <span>Check Size</span>
                     <span>Profile</span>
                 </div>
@@ -706,12 +630,12 @@ const SignupFlow = () => {
         );
     };
 
-    // Profile
+    // The ProfileView code
     const ProfileView = () => {
         return (
             <div>
                 <div style={styles.header}>
-                    <h1 style={styles.title}>Your Startup Profile</h1>
+                    <h1 style={styles.title}>Startup Profile</h1>
                     <p style={styles.subtitle}>Review and edit your profile information</p>
                 </div>
 
@@ -806,11 +730,11 @@ const SignupFlow = () => {
                                     <div style={styles.profileValue}>{formData.traction || 'Not specified'}</div>
                                 </div>
                                 <div style={styles.profileDetail}>
-                                    <div style={styles.profileLabel}>Team Experience</div>
+                                    <div style={styles.profileLabel}>Team Exp.</div>
                                     <div style={styles.profileValue}>{formData.teamExperience || 'Not specified'}</div>
                                 </div>
                                 <div style={styles.profileDetail}>
-                                    <div style={styles.profileLabel}>Pitch Summary</div>
+                                    <div style={styles.profileLabel}>Pitch</div>
                                     <div style={styles.profileValue}>{formData.pitchSummary || 'Not specified'}</div>
                                 </div>
                             </div>
@@ -853,7 +777,7 @@ const SignupFlow = () => {
                                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                                 >
-                                    Browse Investors
+                                    Confirm
                                     <ArrowRight style={styles.buttonIcon} />
                                 </button>
                             </a>
@@ -864,79 +788,11 @@ const SignupFlow = () => {
         );
     };
 
-    // Completion view
-    const CompletionView = () => {
-        return (
-            <div>
-                <div style={styles.header}>
-                    <div style={styles.successIcon}>
-                        <Target style={styles.successIconInner} />
-                    </div>
-                    <h1 style={styles.title}>Your profile is complete!</h1>
-                    <p style={styles.subtitle}>You're all set to start connecting with investors</p>
-                </div>
-
-                <div style={styles.nextStepsCard}>
-                    <h3 style={{...styles.infoCardTitle, textAlign: 'center', marginBottom: '16px'}}>
-                        Next Steps
-                    </h3>
-                    <ol style={styles.nextStepsList}>
-                        <li style={styles.nextStepsItem}>
-                            <span style={styles.nextStepsNumber}>1.</span>
-                            <span>Browse matching investors and view their profiles</span>
-                        </li>
-                        <li style={styles.nextStepsItem}>
-                            <span style={styles.nextStepsNumber}>2.</span>
-                            <span>Request introductions to investors you're interested in</span>
-                        </li>
-                        <li style={styles.nextStepsItem}>
-                            <span style={styles.nextStepsNumber}>3.</span>
-                            <span>Upload your pitch deck and other materials</span>
-                        </li>
-                        <li style={styles.nextStepsItem}>
-                            <span style={styles.nextStepsNumber}>4.</span>
-                            <span>Complete your company profile for better matching</span>
-                        </li>
-                    </ol>
-                </div>
-
-                <div style={styles.buttonContainer}>
-                    <button
-                        style={{...styles.button, ...styles.secondaryButton}}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
-                        onClick={() => setStep(4)}
-                    >
-                        View Profile
-                    </button>
-                    <a href='/investors'>
-                        <button
-                            style={{...styles.button, ...styles.primaryButton}}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                        >
-                            Browse Investors
-                            <ArrowRight style={styles.buttonIcon} />
-                        </button>
-                    </a>
-                </div>
-            </div>
-        );
-    };
-
-    // Render the correct step
+    // Renders whichever step user is on
     const renderStep = () => {
-        if (completed && step < 4) {
-            // If "completed" but user step is <4, jump to step=4
-            setStep(4);
-        }
         if (step === 4) {
-            // Show final "Profile" screen
+            // Show Profile
             return <ProfileView />;
-        }
-        if (completed) {
-            // Show "CompletionView" if entire flow done
-            return <CompletionView />;
         }
 
         switch (step) {
@@ -983,8 +839,11 @@ const SignupFlow = () => {
                             error={errors.password}
                         />
 
+                        {/* Password tips */}
                         <div style={styles.passwordRequirements}>
-                            <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Password Requirements:</p>
+                            <p style={{ fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                                Password Requirements:
+                            </p>
                             <div style={{
                                 ...styles.passwordRequirementItem,
                                 ...(passwordRequirements.length ? styles.requirementMet : {})
@@ -1069,7 +928,7 @@ const SignupFlow = () => {
                     </div>
                 );
 
-            case 1: // Startup Details
+            case 1: // Startup
                 return (
                     <div style={styles.formSection}>
                         <div style={styles.header}>
@@ -1136,7 +995,7 @@ const SignupFlow = () => {
                     </div>
                 );
 
-            case 2: // Additional Info
+            case 2: // Additional
                 return (
                     <div style={styles.formSection}>
                         <div style={styles.header}>
@@ -1157,7 +1016,7 @@ const SignupFlow = () => {
                                 name="traction"
                                 value={formData.traction}
                                 onChange={handleChange}
-                                placeholder="Describe your current traction and key metrics (e.g., users, revenue, growth rate)"
+                                placeholder="Describe your current traction and key metrics"
                                 onFocus={handleFocus}
                             />
                             <p style={styles.helpText}>Be specific with numbers where possible</p>
@@ -1176,7 +1035,7 @@ const SignupFlow = () => {
                                 name="teamExperience"
                                 value={formData.teamExperience}
                                 onChange={handleChange}
-                                placeholder="Briefly describe your founding team's relevant experience and background"
+                                placeholder="Briefly describe your founding team's relevant experience"
                                 onFocus={handleFocus}
                             />
                         </div>
@@ -1276,6 +1135,7 @@ const SignupFlow = () => {
 
                             <button
                                 style={{...styles.button, ...styles.primaryButton}}
+                                // On final step => nextStep calls => sets isSignedIn => saves to localStorage => step=4
                                 onClick={editMode.checkSize ? () => saveChanges('checkSize') : nextStep}
                                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
@@ -1295,8 +1155,7 @@ const SignupFlow = () => {
     return (
         <div style={styles.container}>
             <div style={styles.formContainer}>
-                {/* Show progress bar only if user not fully at "Profile" or "Complete" */}
-                {!completed && step < 4 && <ProgressIndicator />}
+                {step < 4 && <ProgressIndicator />}
                 {renderStep()}
             </div>
         </div>
