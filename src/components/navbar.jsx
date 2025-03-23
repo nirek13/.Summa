@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+import React, { useEffect, useState } from 'react';
 
 const styles = {
     container: {
@@ -109,7 +109,6 @@ const NavbarPage = () => {
     }, []);
 
     // Detect login status from cookie
-    // Detect login status from cookie
     useEffect(() => {
         const loggedIn = Cookies.get('isSignedIn') === 'true';
         setIsLoggedIn(loggedIn);
@@ -117,7 +116,6 @@ const NavbarPage = () => {
         // Log the user's sign-in status
         console.log(`User is ${loggedIn ? 'signed in' : 'not signed in'}`);
     }, []);
-
 
     return (
         <div style={styles.pageWrapper}>
@@ -162,7 +160,20 @@ const NavbarPage = () => {
                                         onMouseEnter={() => setHoveredLink('database')}
                                         onMouseLeave={() => setHoveredLink(null)}
                                     >
-                                        Database
+                                        Matches
+                                    </a>
+
+                                    {/* NEW: Profile link => jump to step=4 in signup to see final profile */}
+                                    <a
+                                        href="/signup?step=4"
+                                        style={{
+                                            ...styles.specialNavLink,
+                                            ...(hoveredLink === 'profile' ? styles.specialNavLinkHover : {})
+                                        }}
+                                        onMouseEnter={() => setHoveredLink('profile')}
+                                        onMouseLeave={() => setHoveredLink(null)}
+                                    >
+                                        Profile
                                     </a>
 
                                     <button

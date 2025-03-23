@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart2, Briefcase, Building, Database, DollarSign, Edit, FileText, Globe, Lock, Mail, MapPin, PhoneCall, Target, User, Users } from 'lucide-react';
+import { ArrowRight, BarChart2, Briefcase, Building, DollarSign, Edit, FileText, Lock, Mail, MapPin, Target, User, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 // CSS styles without Tailwind
@@ -18,7 +18,9 @@ const styles = {
         backgroundColor: '#FAFBFD',
         borderRadius: '12px',
         boxShadow: '0 4px 12px rgba(50, 50, 50, 0.1)',
-        padding: '32px'
+        padding: '32px',
+        position: 'relative',
+        zIndex: 10
     },
     progressContainer: {
         marginBottom: '32px'
@@ -111,7 +113,7 @@ const styles = {
         border: '1px solid #B6C2CE',
         borderRadius: '8px',
         fontSize: '16px',
-        minHeight: '120px',
+        minHeight: '80px', // shortened default height
         outline: 'none',
         transition: 'all 0.2s ease',
         resize: 'vertical'
@@ -356,25 +358,31 @@ const styles = {
 };
 
 const SignupFlow = () => {
-    const [step, setStep] = useState(0); // Start with credentials step (0)
+    // Steps:
+    // 0 => Credentials
+    // 1 => Startup Details
+    // 2 => Additional Info
+    // 3 => Check Size
+    // 4 => Profile
+    // "completed" => show CompletionView
+
+    const [step, setStep] = useState(0); // start with credentials
     const [formData, setFormData] = useState({
         // Credentials
         fullName: '',
         email: '',
         password: '',
         companyName: '',
-        // Other fields
+        // Startup
         industry: '',
         stage: '',
         businessModel: '',
         location: '',
+        // Additional Info
         traction: '',
         teamExperience: '',
         pitchSummary: '',
-        // VC preferences for matching
-        investmentStage: [],
-        industryFocus: [],
-        geographyPreference: '',
+        // Check Size
         checkSizeMin: '',
         checkSizeMax: '',
     });
@@ -384,7 +392,6 @@ const SignupFlow = () => {
         credentials: false,
         startup: false,
         additional: false,
-        preferences: false,
         checkSize: false
     });
     const [activeTab, setActiveTab] = useState('profile');
@@ -399,6 +406,23 @@ const SignupFlow = () => {
         number: false,
         special: false
     });
+
+    // For focusing inputs on re-renders
+    const [focusedInput, setFocusedInput] = useState(null);
+    const inputRefs = {};
+
+    // If user is already logged in, you could do a check here:
+    // const isLoggedIn = Cookies.get('isSignedIn') === 'true';
+
+    // Check for ?step=4 in the URL => user clicked "Profile"
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const possibleStep = parseInt(params.get('step'), 10);
+        // If it's a valid step, jump there
+        if (!isNaN(possibleStep)) {
+            setStep(possibleStep);
+        }
+    }, []);
 
     // Load data from localStorage on component mount
     useEffect(() => {
@@ -433,167 +457,114 @@ const SignupFlow = () => {
         });
     }, [formData.password]);
 
-// At the top of your component, add:
-    const [focusedInput, setFocusedInput] = useState(null);
-    const inputRefs = {};
-
-// Add a function to handle focus events
-    const handleFocus = (e) => {
-        setFocusedInput(e.target.name);
-    };
-
-// Modify your handleChange function:
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-
-        // Clear error for the field being edited
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
-        }
-    };
-
-// After your state update, restore focus
+    // Restore focus after changes
     useEffect(() => {
         if (focusedInput && inputRefs[focusedInput]) {
             inputRefs[focusedInput].focus();
         }
     }, [formData, errors, focusedInput]);
-    const handleMultiSelect = (e) => {
-        const { name } = e.target;
-        const values = Array.from(e.target.selectedOptions, option => option.value);
-        setFormData(prev => ({ ...prev, [name]: values }));
+
+    const handleFocus = (e) => {
+        setFocusedInput(e.target.name);
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const validateCredentials = () => {
         const newErrors = {};
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
+
         if (!formData.fullName.trim()) {
             newErrors.fullName = 'Full name is required';
         }
-        
         if (!formData.email.trim()) {
             newErrors.email = 'Email is required';
         } else if (!emailRegex.test(formData.email)) {
             newErrors.email = 'Please enter a valid email address';
         }
-        
         if (!formData.password) {
             newErrors.password = 'Password is required';
         } else if (
-            !passwordRequirements.length || 
-            !passwordRequirements.uppercase || 
-            !passwordRequirements.lowercase || 
-            !passwordRequirements.number || 
+            !passwordRequirements.length ||
+            !passwordRequirements.uppercase ||
+            !passwordRequirements.lowercase ||
+            !passwordRequirements.number ||
             !passwordRequirements.special
         ) {
             newErrors.password = 'Password does not meet all requirements';
         }
-        
         if (!formData.companyName.trim()) {
             newErrors.companyName = 'Company name is required';
         }
-        
         if (!agreedToTerms) {
             newErrors.terms = 'You must agree to the terms and conditions';
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Update the nextStep function to handle edit mode
+    // Steps are now 5 total: 0..4 => last is "Profile"  
     const nextStep = () => {
-        // If we're at the credentials step, validate first
         if (step === 0) {
-            if (!validateCredentials()) {
-                return;
-            }
+            if (!validateCredentials()) return;
         }
-        
-        if (step === 5) {
+        // If user is at "Check Size" step (step=3) => next means go to "Profile" (step=4)
+        if (step === 3) {
             setCompleted(true);
-        } else {
-            // Check if we're in edit mode and moving from one section to another
+            setStep(4);
+        } else if (step < 4) {
+            // If in edit mode, mark that section as done
             if (Object.values(editMode).some(val => val)) {
-                // Save the current section based on step
                 switch(step) {
-                    case 0:
-                        setEditMode(prev => ({ ...prev, credentials: false }));
-                        break;
-                    case 1:
-                        setEditMode(prev => ({ ...prev, startup: false }));
-                        break;
-                    case 2:
-                        setEditMode(prev => ({ ...prev, additional: false }));
-                        break;
-                    case 3:
-                        setEditMode(prev => ({ ...prev, preferences: false }));
-                        break;
-                    case 4:
-                        setEditMode(prev => ({ ...prev, checkSize: false }));
-                        break;
-                    default:
-                        break;
+                    case 0: setEditMode(prev => ({ ...prev, credentials: false })); break;
+                    case 1: setEditMode(prev => ({ ...prev, startup: false })); break;
+                    case 2: setEditMode(prev => ({ ...prev, additional: false })); break;
+                    case 3: setEditMode(prev => ({ ...prev, checkSize: false })); break;
+                    default: break;
                 }
             }
             setStep(step + 1);
         }
     };
 
-    // Update the prevStep function to handle edit mode
     const prevStep = () => {
         if (Object.values(editMode).some(val => val) && step === 0) {
-            // If in edit mode and at credentials step, cancel edit and return to profile
-            setEditMode({
-                credentials: false,
-                startup: false,
-                additional: false,
-                preferences: false,
-                checkSize: false
-            });
-            setStep(5);
+            // If in edit mode and at credentials step, cancel edit and go to profile
+            setEditMode({ credentials: false, startup: false, additional: false, checkSize: false });
+            setStep(4);
         } else if (step > 0) {
             setStep(step - 1);
         }
     };
-    
+
     const startEditing = (section) => {
         setEditMode(prev => ({ ...prev, [section]: true }));
-        // Set step based on section
         switch(section) {
-            case 'credentials':
-                setStep(0);
-                break;
-            case 'startup':
-                setStep(1);
-                break;
-            case 'additional':
-                setStep(2);
-                break;
-            case 'preferences':
-                setStep(3);
-                break;
-            case 'checkSize':
-                setStep(4);
-                break;
-            default:
-                break;
+            case 'credentials': setStep(0); break;
+            case 'startup': setStep(1); break;
+            case 'additional': setStep(2); break;
+            case 'checkSize': setStep(3); break;
+            default: break;
         }
     };
 
     const saveChanges = (section) => {
         setEditMode(prev => ({ ...prev, [section]: false }));
-        // Return to profile view
-        setStep(5);
+        // Return to profile step
+        setStep(4);
     };
 
-    // Component for form input with icon
-    const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, multiple, required = false, error }) => {
+    // InputWithIcon component
+    const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, required = false, error }) => {
         const Icon = icon;
 
-        // Initialize ref if needed
         useEffect(() => {
             if (!inputRefs[name]) {
                 inputRefs[name] = React.createRef();
@@ -611,17 +582,15 @@ const SignupFlow = () => {
 
                 {options ? (
                     <select
-                        ref={(el) => inputRefs[name] = el}
+                        ref={el => inputRefs[name] = el}
                         onFocus={handleFocus}
                         style={{...styles.select, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
                         value={value}
-                        onChange={multiple ? handleMultiSelect : onChange}
-                        multiple={multiple}
-                        size={multiple ? 5 : 1}
+                        onChange={onChange}
                     >
-                        {!multiple && <option value="">Select an option</option>}
+                        <option value="">Select an option</option>
                         {options.map((option) => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
@@ -630,17 +599,17 @@ const SignupFlow = () => {
                     </select>
                 ) : type === "password" ? (
                     <div style={{ position: 'relative' }}>
-          <input
-              ref={(el) => inputRefs[name] = el}
-              onFocus={handleFocus}
-              style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
-              id={name}
-              name={name}
-              type={passwordVisible ? "text" : "password"}
-              value={value}
-              onChange={onChange}
-              placeholder={placeholder}
-          />
+                        <input
+                            ref={el => inputRefs[name] = el}
+                            onFocus={handleFocus}
+                            style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                            id={name}
+                            name={name}
+                            type={passwordVisible ? "text" : "password"}
+                            value={value}
+                            onChange={onChange}
+                            placeholder={placeholder}
+                        />
                         <button
                             type="button"
                             onClick={() => setPasswordVisible(!passwordVisible)}
@@ -660,7 +629,7 @@ const SignupFlow = () => {
                     </div>
                 ) : (
                     <input
-                        ref={(el) => inputRefs[name] = el}
+                        ref={el => inputRefs[name] = el}
                         onFocus={handleFocus}
                         style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
@@ -676,7 +645,8 @@ const SignupFlow = () => {
             </div>
         );
     };
-    // Input options
+
+    // Options
     const industryOptions = [
         { value: 'fintech', label: 'Fintech' },
         { value: 'healthtech', label: 'Healthtech' },
@@ -708,15 +678,14 @@ const SignupFlow = () => {
         { value: 'subscription', label: 'Subscription' }
     ];
 
-    // Helper function to get label from value for selects
     const getLabelFromValue = (options, value) => {
         const option = options.find(opt => opt.value === value);
         return option ? option.label : value;
     };
 
-    // Progress indicator
+    // Progress bar: 5 steps total now
     const ProgressIndicator = () => {
-        const totalSteps = 6; // Include credentials step
+        const totalSteps = 5; // 0..4 => last is profile
         const progress = ((step + 1) / totalSteps) * 100;
 
         return (
@@ -730,15 +699,14 @@ const SignupFlow = () => {
                     <span>Credentials</span>
                     <span>Startup Details</span>
                     <span>Additional Info</span>
-                    <span>VC Preferences</span>
                     <span>Check Size</span>
-                    <span>Complete</span>
+                    <span>Profile</span>
                 </div>
             </div>
         );
     };
 
-    // Profile view component
+    // Profile
     const ProfileView = () => {
         return (
             <div>
@@ -759,7 +727,7 @@ const SignupFlow = () => {
                     </div>
                 </div>
 
-                {activeTab === 'profile' ? (
+                {activeTab === 'profile' && (
                     <>
                         <div style={styles.profileSummary}>
                             <div style={styles.profileSection}>
@@ -849,39 +817,6 @@ const SignupFlow = () => {
 
                             <div style={styles.profileSection}>
                                 <h3 style={styles.profileSectionTitle}>
-                                    Investor Preferences
-                                    <button
-                                        style={styles.editButton}
-                                        onClick={() => startEditing('preferences')}
-                                    >
-                                        <Edit style={styles.editIcon} />
-                                        Edit
-                                    </button>
-                                </h3>
-                                <div style={styles.profileDetail}>
-                                    <div style={styles.profileLabel}>Investment Stage</div>
-                                    <div style={styles.profileValue}>
-                                        {formData.investmentStage && formData.investmentStage.length > 0
-                                            ? formData.investmentStage.map(stage => getLabelFromValue(stageOptions, stage)).join(', ')
-                                            : 'Not specified'}
-                                    </div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={styles.profileLabel}>Industry Focus</div>
-                                    <div style={styles.profileValue}>
-                                        {formData.industryFocus && formData.industryFocus.length > 0
-                                            ? formData.industryFocus.map(ind => getLabelFromValue(industryOptions, ind)).join(', ')
-                                            : 'Not specified'}
-                                    </div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={styles.profileLabel}>Geography</div>
-                                    <div style={styles.profileValue}>{formData.geographyPreference || 'Not specified'}</div>
-                                </div>
-                            </div>
-
-                            <div style={styles.profileSection}>
-                                <h3 style={styles.profileSectionTitle}>
                                     Check Size
                                     <button
                                         style={styles.editButton}
@@ -894,13 +829,17 @@ const SignupFlow = () => {
                                 <div style={styles.profileDetail}>
                                     <div style={styles.profileLabel}>Minimum ($)</div>
                                     <div style={styles.profileValue}>
-                                        {formData.checkSizeMin ? `$${parseInt(formData.checkSizeMin).toLocaleString()}` : 'Not specified'}
+                                        {formData.checkSizeMin 
+                                            ? `$${parseInt(formData.checkSizeMin).toLocaleString()}`
+                                            : 'Not specified'}
                                     </div>
                                 </div>
                                 <div style={styles.profileDetail}>
                                     <div style={styles.profileLabel}>Maximum ($)</div>
                                     <div style={styles.profileValue}>
-                                        {formData.checkSizeMax ? `$${parseInt(formData.checkSizeMax).toLocaleString()}` : 'Not specified'}
+                                        {formData.checkSizeMax
+                                            ? `$${parseInt(formData.checkSizeMax).toLocaleString()}`
+                                            : 'Not specified'}
                                     </div>
                                 </div>
                             </div>
@@ -920,129 +859,12 @@ const SignupFlow = () => {
                             </a>
                         </div>
                     </>
-                ) : (
-                    // VC Matches tab content
-                    <div>
-                        <div style={styles.infoCard}>
-                            <div style={styles.infoCardHeader}>
-                                <div>
-                                    <h3 style={styles.infoCardTitle}>Investor Matches</h3>
-                                    <p style={styles.infoCardText}>
-                                        Based on your profile, we've identified these investors who might be a good fit for your startup.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* Example VC match cards - in a real app, these would be dynamically generated */}
-                        <div style={{...styles.profileSummary, marginBottom: '16px'}}>
-                            <div style={{...styles.flexRow, justifyContent: 'space-between'}}>
-                                <div>
-                                    <h3 style={{...styles.profileSectionTitle, marginBottom: '4px'}}>Sequoia Capital</h3>
-                                    <p style={{...styles.infoCardText, marginBottom: '12px'}}>Early to growth stage venture capital firm</p>
-                                </div>
-                                <div>
-                                    <span style={{...styles.infoCardText, backgroundColor: '#F0F4F5', padding: '4px 8px', borderRadius: '4px'}}>
-                                        95% Match
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div style={styles.flexRow}>
-                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><MapPin size={16} style={{marginRight: '4px'}} /> Location:</div>
-                                    <div style={styles.profileValue}>Menlo Park, CA</div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><Target size={16} style={{marginRight: '4px'}} /> Focus:</div>
-                                    <div style={styles.profileValue}>Tech, AI, SaaS</div>
-                                </div>
-                            </div>
-                            
-                            <div style={styles.flexRow}>
-                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><DollarSign size={16} style={{marginRight: '4px'}} /> Check Size:</div>
-                                    <div style={styles.profileValue}>$1M - $10M</div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><BarChart2 size={16} style={{marginRight: '4px'}} /> Stage:</div>
-                                    <div style={styles.profileValue}>Seed, Series A, Series B</div>
-                                </div>
-                            </div>
-                            
-                            <div style={{...styles.buttonContainer, justifyContent: 'flex-start', marginTop: '16px'}}>
-                                <button style={{...styles.button, ...styles.primaryButton, padding: '8px 16px'}}>
-                                    View Profile
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div style={{...styles.profileSummary, marginBottom: '16px'}}>
-                            <div style={{...styles.flexRow, justifyContent: 'space-between'}}>
-                                <div>
-                                    <h3 style={{...styles.profileSectionTitle, marginBottom: '4px'}}>Andreessen Horowitz</h3>
-                                    <p style={{...styles.infoCardText, marginBottom: '12px'}}>Stage-agnostic venture capital firm</p>
-                                </div>
-                                <div>
-                                    <span style={{...styles.infoCardText, backgroundColor: '#F0F4F5', padding: '4px 8px', borderRadius: '4px'}}>
-                                        88% Match
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div style={styles.flexRow}>
-                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><MapPin size={16} style={{marginRight: '4px'}} /> Location:</div>
-                                    <div style={styles.profileValue}>Menlo Park, CA</div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><Target size={16} style={{marginRight: '4px'}} /> Focus:</div>
-                                    <div style={styles.profileValue}>Fintech, Crypto, Enterprise</div>
-                                </div>
-                            </div>
-                            
-                            <div style={styles.flexRow}>
-                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><DollarSign size={16} style={{marginRight: '4px'}} /> Check Size:</div>
-                                    <div style={styles.profileValue}>$500K - $15M</div>
-                                </div>
-                                <div style={styles.profileDetail}>
-                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><BarChart2 size={16} style={{marginRight: '4px'}} /> Stage:</div>
-                                    <div style={styles.profileValue}>Seed through Series C</div>
-                                </div>
-                            </div>
-                            
-                            <div style={{...styles.buttonContainer, justifyContent: 'flex-start', marginTop: '16px'}}>
-                                <button style={{...styles.button, ...styles.primaryButton, padding: '8px 16px'}}>
-                                    View Profile
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div style={{...styles.buttonContainer, marginTop: '32px'}}>
-                            <button
-                                style={{...styles.button, ...styles.secondaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
-                            >
-                                Filter Results
-                            </button>
-                            <button
-                                style={{...styles.button, ...styles.primaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                            >
-                                Browse All Investors
-                                <ArrowRight style={styles.buttonIcon} />
-                            </button>
-                        </div>
-                    </div>
                 )}
             </div>
         );
     };
 
-    // Completion view component
+    // Completion view
     const CompletionView = () => {
         return (
             <div>
@@ -1083,7 +905,7 @@ const SignupFlow = () => {
                         style={{...styles.button, ...styles.secondaryButton}}
                         onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
                         onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
-                        onClick={() => setStep(5)}
+                        onClick={() => setStep(4)}
                     >
                         View Profile
                     </button>
@@ -1102,14 +924,19 @@ const SignupFlow = () => {
         );
     };
 
-    // Form rendering based on current step
+    // Render the correct step
     const renderStep = () => {
-        if (completed) {
-            return <CompletionView />;
+        if (completed && step < 4) {
+            // If "completed" but user step is <4, jump to step=4
+            setStep(4);
         }
-
-        if (step === 5) {
+        if (step === 4) {
+            // Show final "Profile" screen
             return <ProfileView />;
+        }
+        if (completed) {
+            // Show "CompletionView" if entire flow done
+            return <CompletionView />;
         }
 
         switch (step) {
@@ -1228,7 +1055,7 @@ const SignupFlow = () => {
                                     Cancel
                                 </button>
                             )}
-                            
+
                             <button
                                 style={{...styles.button, ...styles.primaryButton}}
                                 onClick={editMode.credentials ? () => saveChanges('credentials') : nextStep}
@@ -1241,7 +1068,7 @@ const SignupFlow = () => {
                         </div>
                     </div>
                 );
-            
+
             case 1: // Startup Details
                 return (
                     <div style={styles.formSection}>
@@ -1295,7 +1122,7 @@ const SignupFlow = () => {
                             >
                                 Back
                             </button>
-                            
+
                             <button
                                 style={{...styles.button, ...styles.primaryButton}}
                                 onClick={editMode.startup ? () => saveChanges('startup') : nextStep}
@@ -1308,7 +1135,7 @@ const SignupFlow = () => {
                         </div>
                     </div>
                 );
-            
+
             case 2: // Additional Info
                 return (
                     <div style={styles.formSection}>
@@ -1331,6 +1158,7 @@ const SignupFlow = () => {
                                 value={formData.traction}
                                 onChange={handleChange}
                                 placeholder="Describe your current traction and key metrics (e.g., users, revenue, growth rate)"
+                                onFocus={handleFocus}
                             />
                             <p style={styles.helpText}>Be specific with numbers where possible</p>
                         </div>
@@ -1349,6 +1177,7 @@ const SignupFlow = () => {
                                 value={formData.teamExperience}
                                 onChange={handleChange}
                                 placeholder="Briefly describe your founding team's relevant experience and background"
+                                onFocus={handleFocus}
                             />
                         </div>
 
@@ -1365,7 +1194,8 @@ const SignupFlow = () => {
                                 name="pitchSummary"
                                 value={formData.pitchSummary}
                                 onChange={handleChange}
-                                placeholder="Summarize your business in 1-2 sentences (e.g., 'We help [target customers] solve [problem] with [solution]')"
+                                placeholder="Summarize your business in 1-2 sentences"
+                                onFocus={handleFocus}
                             />
                             <p style={styles.helpText}>Keep this concise - you'll have opportunities to share more details later</p>
                         </div>
@@ -1379,7 +1209,7 @@ const SignupFlow = () => {
                             >
                                 Back
                             </button>
-                            
+
                             <button
                                 style={{...styles.button, ...styles.primaryButton}}
                                 onClick={editMode.additional ? () => saveChanges('additional') : nextStep}
@@ -1392,81 +1222,8 @@ const SignupFlow = () => {
                         </div>
                     </div>
                 );
-            
-            case 3: // VC Preferences
-                return (
-                    <div style={styles.formSection}>
-                        <div style={styles.header}>
-                            <h1 style={styles.title}>Investor Preferences</h1>
-                            <p style={styles.subtitle}>Help us match you with the right investors</p>
-                        </div>
-                        
-                        <div style={styles.infoCard}>
-                            <div style={styles.infoCardHeader}>
-                                <div>
-                                    <h3 style={styles.infoCardTitle}>What are you looking for in an investor?</h3>
-                                    <p style={styles.infoCardText}>
-                                        These preferences will help us match you with investors who are the best fit for your startup.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <InputWithIcon
-                            icon={Target}
-                            label="Investment Stage Focus"
-                            name="investmentStage"
-                            value={formData.investmentStage}
-                            onChange={handleMultiSelect}
-                            options={stageOptions}
-                            multiple={true}
-                        />
-                        <p style={styles.helpText}>Select all stages that apply (ctrl/cmd+click for multiple)</p>
-
-                        <InputWithIcon
-                            icon={BarChart2}
-                            label="Industry Focus"
-                            name="industryFocus"
-                            value={formData.industryFocus}
-                            onChange={handleMultiSelect}
-                            options={industryOptions}
-                            multiple={true}
-                        />
-                        <p style={styles.helpText}>Select all industries that apply (ctrl/cmd+click for multiple)</p>
-
-                        <InputWithIcon
-                            icon={Globe}
-                            label="Geography Preference"
-                            name="geographyPreference"
-                            value={formData.geographyPreference}
-                            onChange={handleChange}
-                            placeholder="e.g. US, Europe, Global"
-                        />
-
-                        <div style={styles.buttonContainer}>
-                            <button
-                                style={{...styles.button, ...styles.secondaryButton}}
-                                onClick={prevStep}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
-                            >
-                                Back
-                            </button>
-                            
-                            <button
-                                style={{...styles.button, ...styles.primaryButton}}
-                                onClick={editMode.preferences ? () => saveChanges('preferences') : nextStep}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                            >
-                                {editMode.preferences ? 'Save Changes' : 'Continue'}
-                                <ArrowRight style={styles.buttonIcon} />
-                            </button>
-                        </div>
-                    </div>
-                );
-            
-            case 4: // Check Size
+            case 3: // Check Size
                 return (
                     <div style={styles.formSection}>
                         <div style={styles.header}>
@@ -1495,7 +1252,7 @@ const SignupFlow = () => {
                                 onChange={handleChange}
                                 placeholder="e.g. 250000"
                             />
-                            
+
                             <InputWithIcon
                                 icon={DollarSign}
                                 label="Maximum ($)"
@@ -1516,7 +1273,7 @@ const SignupFlow = () => {
                             >
                                 Back
                             </button>
-                            
+
                             <button
                                 style={{...styles.button, ...styles.primaryButton}}
                                 onClick={editMode.checkSize ? () => saveChanges('checkSize') : nextStep}
@@ -1529,7 +1286,7 @@ const SignupFlow = () => {
                         </div>
                     </div>
                 );
-            
+
             default:
                 return null;
         }
@@ -1538,7 +1295,8 @@ const SignupFlow = () => {
     return (
         <div style={styles.container}>
             <div style={styles.formContainer}>
-                {!completed && step < 5 && <ProgressIndicator />}
+                {/* Show progress bar only if user not fully at "Profile" or "Complete" */}
+                {!completed && step < 4 && <ProgressIndicator />}
                 {renderStep()}
             </div>
         </div>
