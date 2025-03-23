@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart2, Briefcase, Building, Database, DollarSign, Edit, FileText, Globe, MapPin, PhoneCall, Target, Users } from 'lucide-react';
+import { ArrowRight, BarChart2, Briefcase, Building, Database, DollarSign, Edit, FileText, Globe, Lock, Mail, MapPin, PhoneCall, Target, User, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 // CSS styles without Tailwind
@@ -119,6 +119,11 @@ const styles = {
     helpText: {
         fontSize: '12px',
         color: '#688990',
+        marginTop: '4px'
+    },
+    errorText: {
+        fontSize: '12px',
+        color: '#E53E3E',
         marginTop: '4px'
     },
     buttonContainer: {
@@ -314,13 +319,51 @@ const styles = {
     activeTab: {
         color: '#4D766E',
         borderBottom: '2px solid #4D766E'
+    },
+    checkbox: {
+        marginRight: '8px'
+    },
+    checkboxContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '16px'
+    },
+    checkboxLabel: {
+        fontSize: '14px',
+        color: '#323232'
+    },
+    linkText: {
+        color: '#4D766E',
+        textDecoration: 'underline',
+        cursor: 'pointer'
+    },
+    passwordRequirements: {
+        marginTop: '12px',
+        padding: '12px',
+        backgroundColor: '#F0F4F5',
+        borderRadius: '8px'
+    },
+    passwordRequirementItem: {
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: '12px',
+        color: '#688990',
+        marginBottom: '4px'
+    },
+    requirementMet: {
+        color: '#4D766E'
     }
 };
 
 const SignupFlow = () => {
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0); // Start with credentials step (0)
     const [formData, setFormData] = useState({
-        // Startup info
+        // Credentials
+        fullName: '',
+        email: '',
+        password: '',
+        companyName: '',
+        // Other fields
         industry: '',
         stage: '',
         businessModel: '',
@@ -335,14 +378,27 @@ const SignupFlow = () => {
         checkSizeMin: '',
         checkSizeMax: '',
     });
+    const [errors, setErrors] = useState({});
     const [completed, setCompleted] = useState(false);
     const [editMode, setEditMode] = useState({
+        credentials: false,
         startup: false,
         additional: false,
         preferences: false,
         checkSize: false
     });
     const [activeTab, setActiveTab] = useState('profile');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [passwordVisible, setPasswordVisible] = useState(false);
+
+    // Password requirements check
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        special: false
+    });
 
     // Load data from localStorage on component mount
     useEffect(() => {
@@ -365,9 +421,26 @@ const SignupFlow = () => {
         }
     }, [formData, completed]);
 
+    // Check password requirements
+    useEffect(() => {
+        const password = formData.password;
+        setPasswordRequirements({
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password)
+        });
+    }, [formData.password]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Clear error for the field being edited
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const handleMultiSelect = (e) => {
@@ -376,8 +449,53 @@ const SignupFlow = () => {
         setFormData(prev => ({ ...prev, [name]: values }));
     };
 
-// Update the nextStep function to handle edit mode
+    const validateCredentials = () => {
+        const newErrors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Full name is required';
+        }
+        
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+        
+        if (!formData.password) {
+            newErrors.password = 'Password is required';
+        } else if (
+            !passwordRequirements.length || 
+            !passwordRequirements.uppercase || 
+            !passwordRequirements.lowercase || 
+            !passwordRequirements.number || 
+            !passwordRequirements.special
+        ) {
+            newErrors.password = 'Password does not meet all requirements';
+        }
+        
+        if (!formData.companyName.trim()) {
+            newErrors.companyName = 'Company name is required';
+        }
+        
+        if (!agreedToTerms) {
+            newErrors.terms = 'You must agree to the terms and conditions';
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Update the nextStep function to handle edit mode
     const nextStep = () => {
+        // If we're at the credentials step, validate first
+        if (step === 0) {
+            if (!validateCredentials()) {
+                return;
+            }
+        }
+        
         if (step === 5) {
             setCompleted(true);
         } else {
@@ -385,6 +503,9 @@ const SignupFlow = () => {
             if (Object.values(editMode).some(val => val)) {
                 // Save the current section based on step
                 switch(step) {
+                    case 0:
+                        setEditMode(prev => ({ ...prev, credentials: false }));
+                        break;
                     case 1:
                         setEditMode(prev => ({ ...prev, startup: false }));
                         break;
@@ -405,25 +526,30 @@ const SignupFlow = () => {
         }
     };
 
-// Update the prevStep function to handle edit mode
+    // Update the prevStep function to handle edit mode
     const prevStep = () => {
-        if (Object.values(editMode).some(val => val) && step === 1) {
-            // If in edit mode and at first step, cancel edit and return to profile
+        if (Object.values(editMode).some(val => val) && step === 0) {
+            // If in edit mode and at credentials step, cancel edit and return to profile
             setEditMode({
+                credentials: false,
                 startup: false,
                 additional: false,
                 preferences: false,
                 checkSize: false
             });
             setStep(5);
-        } else {
+        } else if (step > 0) {
             setStep(step - 1);
         }
     };
+    
     const startEditing = (section) => {
         setEditMode(prev => ({ ...prev, [section]: true }));
         // Set step based on section
         switch(section) {
+            case 'credentials':
+                setStep(0);
+                break;
             case 'startup':
                 setStep(1);
                 break;
@@ -448,7 +574,7 @@ const SignupFlow = () => {
     };
 
     // Component for form input with icon
-    const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, multiple }) => {
+    const InputWithIcon = ({ icon, label, name, type = "text", value, onChange, placeholder, options, multiple, required = false, error }) => {
         const Icon = icon;
 
         return (
@@ -456,13 +582,13 @@ const SignupFlow = () => {
                 <label style={styles.label} htmlFor={name}>
                     <div style={styles.labelWithIcon}>
                         <Icon style={styles.icon} />
-                        <span>{label}</span>
+                        <span>{label}{required && <span style={{ color: '#E53E3E' }}> *</span>}</span>
                     </div>
                 </label>
 
                 {options ? (
                     <select
-                        style={styles.select}
+                        style={{...styles.select, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
                         value={value}
@@ -477,9 +603,37 @@ const SignupFlow = () => {
                             </option>
                         ))}
                     </select>
+                ) : type === "password" ? (
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
+                            id={name}
+                            name={name}
+                            type={passwordVisible ? "text" : "password"}
+                            value={value}
+                            onChange={onChange}
+                            placeholder={placeholder}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setPasswordVisible(!passwordVisible)}
+                            style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#688990'
+                            }}
+                        >
+                            {passwordVisible ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
                 ) : (
                     <input
-                        style={styles.input}
+                        style={{...styles.input, ...(error ? { borderColor: '#E53E3E' } : {})}}
                         id={name}
                         name={name}
                         type={type}
@@ -488,6 +642,8 @@ const SignupFlow = () => {
                         placeholder={placeholder}
                     />
                 )}
+                
+                {error && <p style={styles.errorText}>{error}</p>}
             </div>
         );
     };
@@ -532,8 +688,8 @@ const SignupFlow = () => {
 
     // Progress indicator
     const ProgressIndicator = () => {
-        const totalSteps = 5;
-        const progress = (step / totalSteps) * 100;
+        const totalSteps = 6; // Include credentials step
+        const progress = ((step + 1) / totalSteps) * 100;
 
         return (
             <div style={styles.progressContainer}>
@@ -543,6 +699,7 @@ const SignupFlow = () => {
                     ></div>
                 </div>
                 <div style={styles.progressLabels}>
+                    <span>Credentials</span>
                     <span>Startup Details</span>
                     <span>Additional Info</span>
                     <span>VC Preferences</span>
@@ -586,6 +743,31 @@ const SignupFlow = () => {
                 {activeTab === 'profile' ? (
                     <>
                         <div style={styles.profileSummary}>
+                            <div style={styles.profileSection}>
+                                <h3 style={styles.profileSectionTitle}>
+                                    Account Information
+                                    <button
+                                        style={styles.editButton}
+                                        onClick={() => startEditing('credentials')}
+                                    >
+                                        <Edit style={styles.editIcon} />
+                                        Edit
+                                    </button>
+                                </h3>
+                                <div style={styles.profileDetail}>
+                                    <div style={styles.profileLabel}>Full Name</div>
+                                    <div style={styles.profileValue}>{formData.fullName}</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={styles.profileLabel}>Email</div>
+                                    <div style={styles.profileValue}>{formData.email}</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={styles.profileLabel}>Company</div>
+                                    <div style={styles.profileValue}>{formData.companyName}</div>
+                                </div>
+                            </div>
+                            
                             <div style={styles.profileSection}>
                                 <h3 style={styles.profileSectionTitle}>
                                     Startup Information
@@ -713,51 +895,127 @@ const SignupFlow = () => {
                                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
                                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
                                 >
-                                    View VC Matches <ArrowRight style={styles.buttonIcon} />
+                                    Browse Investors
+                                    <ArrowRight style={styles.buttonIcon} />
                                 </button>
                             </a>
                         </div>
                     </>
                 ) : (
-                    <div style={styles.infoCard}>
-                        <div style={styles.infoCardHeader}>
-                            <Database style={{...styles.icon, marginTop: '4px'}} />
-                            <div>
-                                <h3 style={styles.infoCardTitle}>Your VC Matches</h3>
-                                <p style={styles.infoCardText}>
-                                    Based on your profile, we've identified the following investors that match your criteria:
-                                </p>
-                                <div style={styles.listContainer}>
-                                    <div style={styles.listItem}>
-                                        <div style={styles.listDot}></div>
-                                        Acme Ventures - Series A, Fintech, $1-5M
-                                    </div>
-                                    <div style={styles.listItem}>
-                                        <div style={styles.listDot}></div>
-                                        BlueSky Capital - Seed, SaaS, $250K-$1M
-                                    </div>
-                                    <div style={styles.listItem}>
-                                        <div style={styles.listDot}></div>
-                                        Highland Investors - Series A, B2B, $2-7M
-                                    </div>
-                                    <div style={styles.listItem}>
-                                        <div style={styles.listDot}></div>
-                                        Tech Founders Fund - Pre-Seed/Seed, Various, $100-500K
-                                    </div>
-                                </div>
-                                <div style={styles.buttonContainer}>
-                                    <div></div>
-                                    <a href='/investors/all'>
-                                        <button
-                                            style={{...styles.button, ...styles.primaryButton}}
-                                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                        >
-                                            View All Matches <ArrowRight style={styles.buttonIcon} />
-                                        </button>
-                                    </a>
+                    // VC Matches tab content
+                    <div>
+                        <div style={styles.infoCard}>
+                            <div style={styles.infoCardHeader}>
+                                <div>
+                                    <h3 style={styles.infoCardTitle}>Investor Matches</h3>
+                                    <p style={styles.infoCardText}>
+                                        Based on your profile, we've identified these investors who might be a good fit for your startup.
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+                        
+                        {/* Example VC match cards - in a real app, these would be dynamically generated */}
+                        <div style={{...styles.profileSummary, marginBottom: '16px'}}>
+                            <div style={{...styles.flexRow, justifyContent: 'space-between'}}>
+                                <div>
+                                    <h3 style={{...styles.profileSectionTitle, marginBottom: '4px'}}>Sequoia Capital</h3>
+                                    <p style={{...styles.infoCardText, marginBottom: '12px'}}>Early to growth stage venture capital firm</p>
+                                </div>
+                                <div>
+                                    <span style={{...styles.infoCardText, backgroundColor: '#F0F4F5', padding: '4px 8px', borderRadius: '4px'}}>
+                                        95% Match
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style={styles.flexRow}>
+                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><MapPin size={16} style={{marginRight: '4px'}} /> Location:</div>
+                                    <div style={styles.profileValue}>Menlo Park, CA</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><Target size={16} style={{marginRight: '4px'}} /> Focus:</div>
+                                    <div style={styles.profileValue}>Tech, AI, SaaS</div>
+                                </div>
+                            </div>
+                            
+                            <div style={styles.flexRow}>
+                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><DollarSign size={16} style={{marginRight: '4px'}} /> Check Size:</div>
+                                    <div style={styles.profileValue}>$1M - $10M</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><BarChart2 size={16} style={{marginRight: '4px'}} /> Stage:</div>
+                                    <div style={styles.profileValue}>Seed, Series A, Series B</div>
+                                </div>
+                            </div>
+                            
+                            <div style={{...styles.buttonContainer, justifyContent: 'flex-start', marginTop: '16px'}}>
+                                <button style={{...styles.button, ...styles.primaryButton, padding: '8px 16px'}}>
+                                    View Profile
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style={{...styles.profileSummary, marginBottom: '16px'}}>
+                            <div style={{...styles.flexRow, justifyContent: 'space-between'}}>
+                                <div>
+                                    <h3 style={{...styles.profileSectionTitle, marginBottom: '4px'}}>Andreessen Horowitz</h3>
+                                    <p style={{...styles.infoCardText, marginBottom: '12px'}}>Stage-agnostic venture capital firm</p>
+                                </div>
+                                <div>
+                                    <span style={{...styles.infoCardText, backgroundColor: '#F0F4F5', padding: '4px 8px', borderRadius: '4px'}}>
+                                        88% Match
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div style={styles.flexRow}>
+                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><MapPin size={16} style={{marginRight: '4px'}} /> Location:</div>
+                                    <div style={styles.profileValue}>Menlo Park, CA</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><Target size={16} style={{marginRight: '4px'}} /> Focus:</div>
+                                    <div style={styles.profileValue}>Fintech, Crypto, Enterprise</div>
+                                </div>
+                            </div>
+                            
+                            <div style={styles.flexRow}>
+                                <div style={{...styles.profileDetail, marginRight: '24px'}}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><DollarSign size={16} style={{marginRight: '4px'}} /> Check Size:</div>
+                                    <div style={styles.profileValue}>$500K - $15M</div>
+                                </div>
+                                <div style={styles.profileDetail}>
+                                    <div style={{...styles.profileLabel, width: 'auto', marginRight: '8px'}}><BarChart2 size={16} style={{marginRight: '4px'}} /> Stage:</div>
+                                    <div style={styles.profileValue}>Seed through Series C</div>
+                                </div>
+                            </div>
+                            
+                            <div style={{...styles.buttonContainer, justifyContent: 'flex-start', marginTop: '16px'}}>
+                                <button style={{...styles.button, ...styles.primaryButton, padding: '8px 16px'}}>
+                                    View Profile
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style={{...styles.buttonContainer, marginTop: '32px'}}>
+                            <button
+                                style={{...styles.button, ...styles.secondaryButton}}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                            >
+                                Filter Results
+                            </button>
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                Browse All Investors
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
                         </div>
                     </div>
                 )}
@@ -765,27 +1023,217 @@ const SignupFlow = () => {
         );
     };
 
-    // Content based on step
+    // Completion view component
+    const CompletionView = () => {
+        return (
+            <div>
+                <div style={styles.header}>
+                    <div style={styles.successIcon}>
+                        <Target style={styles.successIconInner} />
+                    </div>
+                    <h1 style={styles.title}>Your profile is complete!</h1>
+                    <p style={styles.subtitle}>You're all set to start connecting with investors</p>
+                </div>
+
+                <div style={styles.nextStepsCard}>
+                    <h3 style={{...styles.infoCardTitle, textAlign: 'center', marginBottom: '16px'}}>
+                        Next Steps
+                    </h3>
+                    <ol style={styles.nextStepsList}>
+                        <li style={styles.nextStepsItem}>
+                            <span style={styles.nextStepsNumber}>1.</span>
+                            <span>Browse matching investors and view their profiles</span>
+                        </li>
+                        <li style={styles.nextStepsItem}>
+                            <span style={styles.nextStepsNumber}>2.</span>
+                            <span>Request introductions to investors you're interested in</span>
+                        </li>
+                        <li style={styles.nextStepsItem}>
+                            <span style={styles.nextStepsNumber}>3.</span>
+                            <span>Upload your pitch deck and other materials</span>
+                        </li>
+                        <li style={styles.nextStepsItem}>
+                            <span style={styles.nextStepsNumber}>4.</span>
+                            <span>Complete your company profile for better matching</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <div style={styles.buttonContainer}>
+                    <button
+                        style={{...styles.button, ...styles.secondaryButton}}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                        onClick={() => setStep(5)}
+                    >
+                        View Profile
+                    </button>
+                    <a href='/investors'>
+                        <button
+                            style={{...styles.button, ...styles.primaryButton}}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                        >
+                            Browse Investors
+                            <ArrowRight style={styles.buttonIcon} />
+                        </button>
+                    </a>
+                </div>
+            </div>
+        );
+    };
+
+    // Form rendering based on current step
     const renderStep = () => {
-        // If signup is completed and we're not in edit mode, show profile view
-        if (completed && !Object.values(editMode).some(val => val)) {
+        if (completed) {
+            return <CompletionView />;
+        }
+
+        if (step === 5) {
             return <ProfileView />;
         }
 
-        switch(step) {
-            case 1:
+        switch (step) {
+            case 0: // Credentials
                 return (
-                    <div>
+                    <div style={styles.formSection}>
                         <div style={styles.header}>
-                            <h1 style={styles.title}>
-                                {editMode.startup ? 'Edit Startup Details' : 'Tell us about your startup'}
-                            </h1>
-                            <p style={styles.subtitle}>Help us match you with the right investors</p>
+                            <h1 style={styles.title}>Create your account</h1>
+                            <p style={styles.subtitle}>Let's get started connecting your startup with the right investors</p>
                         </div>
 
                         <InputWithIcon
-                            icon={Briefcase}
-                            label="Industry / Sector"
+                            icon={User}
+                            label="Full Name"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleChange}
+                            placeholder="Enter your full name"
+                            required={true}
+                            error={errors.fullName}
+                        />
+
+                        <InputWithIcon
+                            icon={Mail}
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="Enter your email address"
+                            required={true}
+                            error={errors.email}
+                        />
+
+                        <InputWithIcon
+                            icon={Lock}
+                            label="Password"
+                            name="password"
+                            type="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder="Create a secure password"
+                            required={true}
+                            error={errors.password}
+                        />
+
+                        <div style={styles.passwordRequirements}>
+                            <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Password Requirements:</p>
+                            <div style={{
+                                ...styles.passwordRequirementItem,
+                                ...(passwordRequirements.length ? styles.requirementMet : {})
+                            }}>
+                                {passwordRequirements.length ? '✓' : '○'} At least 8 characters
+                            </div>
+                            <div style={{
+                                ...styles.passwordRequirementItem,
+                                ...(passwordRequirements.uppercase ? styles.requirementMet : {})
+                            }}>
+                                {passwordRequirements.uppercase ? '✓' : '○'} At least one uppercase letter
+                            </div>
+                            <div style={{
+                                ...styles.passwordRequirementItem,
+                                ...(passwordRequirements.lowercase ? styles.requirementMet : {})
+                            }}>
+                                {passwordRequirements.lowercase ? '✓' : '○'} At least one lowercase letter
+                            </div>
+                            <div style={{
+                                ...styles.passwordRequirementItem,
+                                ...(passwordRequirements.number ? styles.requirementMet : {})
+                            }}>
+                                {passwordRequirements.number ? '✓' : '○'} At least one number
+                            </div>
+                            <div style={{
+                                ...styles.passwordRequirementItem,
+                                ...(passwordRequirements.special ? styles.requirementMet : {})
+                            }}>
+                                {passwordRequirements.special ? '✓' : '○'} At least one special character
+                            </div>
+                        </div>
+
+                        <InputWithIcon
+                            icon={Building}
+                            label="Company Name"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleChange}
+                            placeholder="Enter your company name"
+                            required={true}
+                            error={errors.companyName}
+                        />
+
+                        <div style={styles.checkboxContainer}>
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={agreedToTerms}
+                                onChange={() => setAgreedToTerms(!agreedToTerms)}
+                                style={styles.checkbox}
+                            />
+                            <label htmlFor="terms" style={styles.checkboxLabel}>
+                                I agree to the <span style={styles.linkText}>Terms of Service</span> and <span style={styles.linkText}>Privacy Policy</span>
+                            </label>
+                        </div>
+                        {errors.terms && <p style={styles.errorText}>{errors.terms}</p>}
+
+                        <div style={styles.buttonContainer}>
+                            {!editMode.credentials ? (
+                                <div></div>
+                            ) : (
+                                <button
+                                    style={{...styles.button, ...styles.secondaryButton}}
+                                    onClick={prevStep}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                            
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onClick={editMode.credentials ? () => saveChanges('credentials') : nextStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                {editMode.credentials ? 'Save Changes' : 'Continue'}
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
+                        </div>
+                    </div>
+                );
+            
+            case 1: // Startup Details
+                return (
+                    <div style={styles.formSection}>
+                        <div style={styles.header}>
+                            <h1 style={styles.title}>Tell us about your startup</h1>
+                            <p style={styles.subtitle}>Help investors understand your business</p>
+                        </div>
+
+                        <InputWithIcon
+                            icon={BarChart2}
+                            label="Industry"
                             name="industry"
                             value={formData.industry}
                             onChange={handleChange}
@@ -794,7 +1242,7 @@ const SignupFlow = () => {
 
                         <InputWithIcon
                             icon={Target}
-                            label="Startup Stage"
+                            label="Current Stage"
                             name="stage"
                             value={formData.stage}
                             onChange={handleChange}
@@ -802,7 +1250,7 @@ const SignupFlow = () => {
                         />
 
                         <InputWithIcon
-                            icon={Building}
+                            icon={Briefcase}
                             label="Business Model"
                             name="businessModel"
                             value={formData.businessModel}
@@ -816,160 +1264,130 @@ const SignupFlow = () => {
                             name="location"
                             value={formData.location}
                             onChange={handleChange}
-                            placeholder="City, Country"
+                            placeholder="e.g. San Francisco, CA"
                         />
 
                         <div style={styles.buttonContainer}>
-                            {editMode.startup ? (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            setEditMode(prev => ({ ...prev, startup: false }));
-                                            setStep(5);
-                                        }}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => saveChanges('startup')}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Save Changes <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <div></div> {/* Empty div for spacing */}
-                                    <button
-                                        onClick={nextStep}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Continue <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            )}
+                            <button
+                                style={{...styles.button, ...styles.secondaryButton}}
+                                onClick={prevStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                            >
+                                Back
+                            </button>
+                            
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onClick={editMode.startup ? () => saveChanges('startup') : nextStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                {editMode.startup ? 'Save Changes' : 'Continue'}
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
                         </div>
                     </div>
                 );
-
-            case 2:
+            
+            case 2: // Additional Info
                 return (
-                    <div>
+                    <div style={styles.formSection}>
                         <div style={styles.header}>
-                            <h1 style={styles.title}>
-                                {editMode.additional ? 'Edit Additional Details' : 'Additional Startup Details'}
-                            </h1>
-                            <p style={styles.subtitle}>These details help us find your perfect investor match</p>
+                            <h1 style={styles.title}>Additional Information</h1>
+                            <p style={styles.subtitle}>Tell investors more about your progress and team</p>
                         </div>
 
-                        <InputWithIcon
-                            icon={BarChart2}
-                            label="Traction (revenue, users, etc.)"
-                            name="traction"
-                            value={formData.traction}
-                            onChange={handleChange}
-                            placeholder="e.g. $10K MRR, 5,000 active users"
-                        />
+                        <div style={styles.formRow}>
+                            <label style={styles.label} htmlFor="traction">
+                                <div style={styles.labelWithIcon}>
+                                    <BarChart2 style={styles.icon} />
+                                    <span>Traction & Metrics</span>
+                                </div>
+                            </label>
+                            <textarea
+                                style={styles.textarea}
+                                id="traction"
+                                name="traction"
+                                value={formData.traction}
+                                onChange={handleChange}
+                                placeholder="Describe your current traction and key metrics (e.g., users, revenue, growth rate)"
+                            />
+                            <p style={styles.helpText}>Be specific with numbers where possible</p>
+                        </div>
 
-                        <InputWithIcon
-                            icon={Users}
-                            label="Team Experience (optional)"
-                            name="teamExperience"
-                            value={formData.teamExperience}
-                            onChange={handleChange}
-                            placeholder="Brief overview of your team's background"
-                        />
+                        <div style={styles.formRow}>
+                            <label style={styles.label} htmlFor="teamExperience">
+                                <div style={styles.labelWithIcon}>
+                                    <Users style={styles.icon} />
+                                    <span>Team Experience</span>
+                                </div>
+                            </label>
+                            <textarea
+                                style={styles.textarea}
+                                id="teamExperience"
+                                name="teamExperience"
+                                value={formData.teamExperience}
+                                onChange={handleChange}
+                                placeholder="Briefly describe your founding team's relevant experience and background"
+                            />
+                        </div>
 
                         <div style={styles.formRow}>
                             <label style={styles.label} htmlFor="pitchSummary">
                                 <div style={styles.labelWithIcon}>
                                     <FileText style={styles.icon} />
-                                    <span>Pitch Summary (optional)</span>
+                                    <span>Elevator Pitch</span>
                                 </div>
                             </label>
                             <textarea
                                 style={styles.textarea}
                                 id="pitchSummary"
                                 name="pitchSummary"
-                                rows="4"
                                 value={formData.pitchSummary}
                                 onChange={handleChange}
-                                placeholder="Brief description of your startup and what makes it unique..."
-                            ></textarea>
+                                placeholder="Summarize your business in 1-2 sentences (e.g., 'We help [target customers] solve [problem] with [solution]')"
+                            />
+                            <p style={styles.helpText}>Keep this concise - you'll have opportunities to share more details later</p>
                         </div>
 
                         <div style={styles.buttonContainer}>
-                            {editMode.additional ? (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            setEditMode(prev => ({ ...prev, additional: false }));
-                                            setStep(5);
-                                        }}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => saveChanges('additional')}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Save Changes <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={prevStep}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        onClick={nextStep}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Continue <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            )}
+                            <button
+                                style={{...styles.button, ...styles.secondaryButton}}
+                                onClick={prevStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                            >
+                                Back
+                            </button>
+                            
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onClick={editMode.additional ? () => saveChanges('additional') : nextStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                {editMode.additional ? 'Save Changes' : 'Continue'}
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
                         </div>
                     </div>
                 );
-
-            case 3:
+            
+            case 3: // VC Preferences
                 return (
-                    <div>
+                    <div style={styles.formSection}>
                         <div style={styles.header}>
-                            <h1 style={styles.title}>
-                                {editMode.preferences ? 'Edit Investor Preferences' : 'Investor Preferences'}
-                            </h1>
-                            <p style={styles.subtitle}>Tell us what you're looking for in an investor</p>
+                            <h1 style={styles.title}>Investor Preferences</h1>
+                            <p style={styles.subtitle}>Help us match you with the right investors</p>
                         </div>
-
+                        
                         <div style={styles.infoCard}>
                             <div style={styles.infoCardHeader}>
-                                <Database style={{...styles.icon, marginTop: '4px'}} />
                                 <div>
-                                    <h3 style={styles.infoCardTitle}>Why This Matters</h3>
+                                    <h3 style={styles.infoCardTitle}>What are you looking for in an investor?</h3>
                                     <p style={styles.infoCardText}>
-                                        Investors often specialize in specific stages, industries, and locations.
-                                        Matching these preferences increases your chances of successful funding.
+                                        These preferences will help us match you with investors who are the best fit for your startup.
                                     </p>
                                 </div>
                             </div>
@@ -977,23 +1395,25 @@ const SignupFlow = () => {
 
                         <InputWithIcon
                             icon={Target}
-                            label="Investment Stage Focus (select multiple)"
+                            label="Investment Stage Focus"
                             name="investmentStage"
                             value={formData.investmentStage}
                             onChange={handleMultiSelect}
                             options={stageOptions}
                             multiple={true}
                         />
+                        <p style={styles.helpText}>Select all stages that apply (ctrl/cmd+click for multiple)</p>
 
                         <InputWithIcon
-                            icon={Briefcase}
-                            label="Industry Focus (select multiple)"
+                            icon={BarChart2}
+                            label="Industry Focus"
                             name="industryFocus"
                             value={formData.industryFocus}
                             onChange={handleMultiSelect}
                             options={industryOptions}
                             multiple={true}
                         />
+                        <p style={styles.helpText}>Select all industries that apply (ctrl/cmd+click for multiple)</p>
 
                         <InputWithIcon
                             icon={Globe}
@@ -1001,74 +1421,46 @@ const SignupFlow = () => {
                             name="geographyPreference"
                             value={formData.geographyPreference}
                             onChange={handleChange}
-                            placeholder="e.g. Global, North America, Europe, etc."
+                            placeholder="e.g. US, Europe, Global"
                         />
 
                         <div style={styles.buttonContainer}>
-                            {editMode.preferences ? (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            setEditMode(prev => ({ ...prev, preferences: false }));
-                                            setStep(5);
-                                        }}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => saveChanges('preferences')}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Save Changes <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={prevStep}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        onClick={nextStep}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Continue <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            )}
+                            <button
+                                style={{...styles.button, ...styles.secondaryButton}}
+                                onClick={prevStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
+                            >
+                                Back
+                            </button>
+                            
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onClick={editMode.preferences ? () => saveChanges('preferences') : nextStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                {editMode.preferences ? 'Save Changes' : 'Continue'}
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
                         </div>
                     </div>
                 );
-
-            case 4:
+            
+            case 4: // Check Size
                 return (
-                    <div>
+                    <div style={styles.formSection}>
                         <div style={styles.header}>
-                            <h1 style={styles.title}>
-                                {editMode.checkSize ? 'Edit Check Size' : 'Define Ideal Check Size'}
-                            </h1>
-                            <p style={styles.subtitle}>What investment range are you seeking?</p>
+                            <h1 style={styles.title}>Investment Size</h1>
+                            <p style={styles.subtitle}>What investment size are you looking for?</p>
                         </div>
 
                         <div style={styles.infoCard}>
                             <div style={styles.infoCardHeader}>
-                                <DollarSign style={{...styles.icon, marginTop: '4px'}} />
                                 <div>
-                                    <h3 style={styles.infoCardTitle}>Check Size Expectations</h3>
+                                    <h3 style={styles.infoCardTitle}>Target Check Size</h3>
                                     <p style={styles.infoCardText}>
-                                        Different investors have minimum and maximum check sizes they typically invest.
-                                        Providing your expected range helps us match you with appropriate investors.
+                                        The typical investment amount you're seeking from a single investor.
                                     </p>
                                 </div>
                             </div>
@@ -1077,152 +1469,61 @@ const SignupFlow = () => {
                         <div style={styles.flexRow}>
                             <InputWithIcon
                                 icon={DollarSign}
-                                label="Minimum Investment"
+                                label="Minimum ($)"
                                 name="checkSizeMin"
                                 type="number"
                                 value={formData.checkSizeMin}
                                 onChange={handleChange}
-                                placeholder="e.g. 50000"
+                                placeholder="e.g. 250000"
                             />
-
+                            
                             <InputWithIcon
                                 icon={DollarSign}
-                                label="Maximum Investment"
+                                label="Maximum ($)"
                                 name="checkSizeMax"
                                 type="number"
                                 value={formData.checkSizeMax}
                                 onChange={handleChange}
-                                placeholder="e.g. 500000"
+                                placeholder="e.g. 1000000"
                             />
-                        </div>
-                        <p style={styles.helpText}>Enter amounts in USD without commas or dollar signs</p>
-
-                        <div style={styles.buttonContainer}>
-                            {editMode.checkSize ? (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            setEditMode(prev => ({ ...prev, checkSize: false }));
-                                            setStep(5);
-                                        }}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => saveChanges('checkSize')}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Save Changes <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={prevStep}
-                                        style={{...styles.button, ...styles.secondaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        onClick={nextStep}
-                                        style={{...styles.button, ...styles.primaryButton}}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                    >
-                                        Complete Profile <ArrowRight style={styles.buttonIcon} />
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 5:
-                return (
-                    <div>
-                        <div style={styles.header}>
-                            <div style={styles.successIcon}>
-                                <Target style={styles.successIconInner}/>
-                            </div>
-                            <h1 style={styles.title}>Profile Completed!</h1>
-                            <p style={styles.subtitle}>Your startup profile has been saved and is ready to match with
-                                investors</p>
-                        </div>
-
-                        <div style={styles.nextStepsCard}>
-                            <h3 style={styles.infoCardTitle}>Next Steps</h3>
-                            <ol style={styles.nextStepsList}>
-                                <li style={styles.nextStepsItem}>
-                                    <span style={styles.nextStepsNumber}>1.</span>
-                                    <span>Review your profile information to ensure it's accurate</span>
-                                </li>
-                                <li style={styles.nextStepsItem}>
-                                    <span style={styles.nextStepsNumber}>2.</span>
-                                    <span>Explore your investor matches based on your profile</span>
-                                </li>
-                                <li style={styles.nextStepsItem}>
-                                    <span style={styles.nextStepsNumber}>3.</span>
-                                    <span>Prepare your pitch materials for potential investor meetings</span>
-                                </li>
-                                <li style={styles.nextStepsItem}>
-                                    <span style={styles.nextStepsNumber}>4.</span>
-                                    <span>Connect with investors that match your criteria</span>
-                                </li>
-                            </ol>
                         </div>
 
                         <div style={styles.buttonContainer}>
                             <button
-                                onClick={() => {
-                                    // Set edit mode for all sections
-                                    setEditMode({
-                                        startup: true,
-                                        additional: true,
-                                        preferences: true,
-                                        checkSize: true
-                                    });
-                                    // Return to first step
-                                    setStep(1);
-                                }}
                                 style={{...styles.button, ...styles.secondaryButton}}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F8F9FA'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                                onClick={prevStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F4F5'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FAFBFD'}
                             >
-                                Edit Entire Profile
+                                Back
                             </button>
-                            <a href='/investors'>
-                                <button
-                                    style={{...styles.button, ...styles.primaryButton}}
-                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
-                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
-                                >
-                                    View VC Matches <ArrowRight style={styles.buttonIcon}/>
-                                </button>
-                            </a>
+                            
+                            <button
+                                style={{...styles.button, ...styles.primaryButton}}
+                                onClick={editMode.checkSize ? () => saveChanges('checkSize') : nextStep}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#688990'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4D766E'}
+                            >
+                                {editMode.checkSize ? 'Save Changes' : 'Complete Profile'}
+                                <ArrowRight style={styles.buttonIcon} />
+                            </button>
                         </div>
                     </div>
-                        );
+                );
+            
+            default:
+                return null;
+        }
+    };
 
-                        default:
-                        return null;
-                        }
-                        };
+    return (
+        <div style={styles.container}>
+            <div style={styles.formContainer}>
+                {!completed && step < 5 && <ProgressIndicator />}
+                {renderStep()}
+            </div>
+        </div>
+    );
+};
 
-                        return (
-                        <div style={styles.container}>
-                            <div style={styles.formContainer}>
-                                {!completed && <ProgressIndicator/>}
-                                {renderStep()}
-                            </div>
-                        </div>
-                        );
-                        };
-
-                        export default SignupFlow;
+export default SignupFlow;
