@@ -1,70 +1,39 @@
-# Getting Started with Create React App
+🚀 Inspiration
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Summa was born out of our personal experiences and frustrations with the startup ecosystem. As aspiring founders and tech enthusiasts, we realized that one of the most daunting parts of building a company isn’t just the product - it’s finding the right investors to believe in your vision. While platforms exist to list investors, none felt tailored, intelligent, or efficient in helping founders find their true matches. We wanted to fix that.
 
-## Available Scripts
+Our idea went through several pivots. We first explored generating CFO-style financial summaries for startups. Then we experimented with a “Tinder for VCs” prototype - a swipe-based matching tool for investors. But after speaking with real founders, we discovered that what they really needed was a data-driven, intelligent investor matchmaking tool - and that’s how Summa was born.
 
-In the project directory, you can run:
+🧠 What We Learned
 
-### `npm start`
+Startup-Investor Fit is Nuanced: It’s not just about industry or stage - things like geography, traction, founder background, and check size all matter.
+NLP Has Real-World Utility: By embedding founder pitch descriptions and investor theses into vector space, we could model complex compatibility beyond just filtering tags.
+Founders Want Actionable Insights: Not everyone wants to read a 10-page investor report. Clean summaries and direct contact info save precious time.
+🛠️ How We Built It
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Frontend: Built with React and TailwindCSS, our UI guides founders through a simple intake form and shows ranked investor results with clarity and focus.
+Backend: A Python Flask server, hosted on Google Cloud Run, powers our matching engine. It performs:
+Tag-based static scoring
+NLP vectorization of startup and investor descriptions
+Cosine similarity to assess semantic overlap
+A weighted combination of scores, fine-tuned through A/B testing
+Data: We scraped and cleaned a dataset of 2,000+ VCs and angel investors, including fields like name, thesis, check size, stage, geography, and contact info.
+Summarization Engine: We integrated Genesis AI to create concise, founder-friendly investor summaries that strip away jargon and give instant clarity.
+⚠️ Challenges We Faced
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Data Cleaning & Structure: Investor data is messy and unstandardized. Harmonizing it into a usable format took more time than expected.
+Score Weighting: It took experimentation and iteration to figure out the right balance between static tagging and semantic NLP similarity.
+UX Flow: We initially overcomplicated the interface. Simplifying the process to just a few inputs made a huge difference for usability.
+Multiple Pivots: From CFO report generator -> Tinder swipe MVP -> Summa match engine, we iterated quickly, testing with users and refining the problem space.
+💡 The Future
 
-### `npm test`
+We’re excited about where Summa can go. With more user feedback, we aim to:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Incorporate real-time founder-investor messaging
+Add filters for diversity-focused or ESG investors
+Create investor dashboards for reverse discovery
+Expand our database to include international investors and syndicates
+Summa is our attempt to cut through the noise and make startup fundraising smarter, faster, and more founder-friendly. Thanks for reading!
 
-### `npm run build`
+Built With
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
