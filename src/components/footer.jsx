@@ -131,6 +131,8 @@ const FooterPage = () => {
                     </div>
                     <p style={styles.footerCopyright}>
                         © {new Date().getFullYear()} Summa. All rights reserved.
+                            <br/>
+                             Crafted with ❤️ by Nirek Shetty, Christian Fisla, Eddie Bian, Mashrufa Mushtari, and our amazing mentor Jason Cameron
                     </p>
                     <p style={styles.teamCredits}>
                         Crafted with ❤️ by Nirek Shetty, Christian Fisla, Eddie Bian, Mashrufa Mushtari, and our amazing mentor Jason Cameron
