@@ -84,13 +84,19 @@ const styles = {
             position: 'relative',
             zIndex: 2,
         },
+        teamCredits: {
+            textAlign: 'center',
+            color: '#688990',
+            fontSize: '12px',
+            marginTop: '10px',
+            position: 'relative',
+            zIndex: 2,
+        }
 };
 
 const FooterPage = () => {
-
     return (
         <div style={styles.pageWrapper}>
-            {/* Footer with LED accents */}
             <footer style={styles.footer}>
                     <div style={styles.footerLedAccent}></div>
                     <div style={styles.footerContent}>
@@ -125,6 +131,9 @@ const FooterPage = () => {
                     </div>
                     <p style={styles.footerCopyright}>
                         © {new Date().getFullYear()} Summa. All rights reserved.
+                    </p>
+                    <p style={styles.teamCredits}>
+                        Crafted with ❤️ by Nirek Shetty, Christian Fisla, Eddie Bian, Mashrufa Mushtari, and our amazing mentor Jason Cameron
                     </p>
                 </footer>
         </div>
