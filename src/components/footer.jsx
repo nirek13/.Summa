@@ -91,7 +91,7 @@ const styles = {
             marginTop: '10px',
             position: 'relative',
             zIndex: 2,
-        }
+        },
 };
 
 const FooterPage = () => {
