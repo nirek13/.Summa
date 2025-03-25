@@ -47,4 +47,4 @@ We’re excited about where Summa can go. With more user feedback, we aim to:
 Summa is our attempt to cut through the noise and make startup fundraising smarter, faster, and more founder-friendly. Thanks for reading!
 
 ---
-
+Summa is still in Beta and as such many features are not in the public domain at this time.
