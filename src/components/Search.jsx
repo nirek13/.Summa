@@ -171,7 +171,7 @@ const InvestorDatabase = () => {
 
     try {
       const res = await fetch(
-        'https://vc-matcher-script-1096385495920.us-central1.run.app/rank-vcs',
+        'https://vc-matcher-script.onrender.com/rank-vcs',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
