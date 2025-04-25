@@ -87,16 +87,16 @@ const StartupMatchingPlatform = () => {
                     {/* Metrics visualization */}
                     <div style={styles.metricsContainer}>
                         <div style={styles.metricItem}>
-                            <div style={styles.metricValue}>93%</div>
-                            <div style={styles.metricLabel}>Match Success</div>
+                            <div style={styles.metricValue}>10,000</div>
+                            <div style={styles.metricLabel}>Venture Capatlists</div>
                         </div>
                         <div style={styles.metricItem}>
-                            <div style={styles.metricValue}>$42M+</div>
-                            <div style={styles.metricLabel}>Funds Raised</div>
+                            <div style={styles.metricValue}>20B+</div>
+                            <div style={styles.metricLabel}> In Funds</div>
                         </div>
                         <div style={styles.metricItem}>
-                            <div style={styles.metricValue}>3,200+</div>
-                            <div style={styles.metricLabel}>Startups Connected</div>
+                            <div style={styles.metricValue}>150+</div>
+                            <div style={styles.metricLabel}>Countries</div>
                         </div>
                     </div>
                 </section>
